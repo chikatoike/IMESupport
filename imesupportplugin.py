@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sublime
 import sublime_plugin
-# import imesupport.subclass
+from imesupport import subclass
 
 
 # Memo
@@ -89,34 +89,22 @@ def get_setting(key, default=None):
         return default
 
 
-class ImeInlineEventListener(sublime_plugin.EventListener):
-    def __init__(self):
-        self.last_pos = (0, 0)
+last_pos = (0, 0)
 
-    def on_selection_modified(self, view):
-        if view.window() is None:
-            sublime.status_message('sublimeimeinline: view.window() is None')
-            return
-
-        global initialized
-        if not initialized:
-            # windows_subclass.setup(view.window().hwnd(), self.callback)
-            initialized = False
-        self.last_pos = calc_position(view)
-
-    def callback(self, hwnd, msg, wParam, lParam):
-        if msg == WM_IME_STARTCOMPOSITION:
-            set_inline_position(hwnd, self.last_pos[0], self.last_pos[1])
-            import os
-            with open(os.path.expandvars('$HOME/log.txt'), 'a') as f:
-                f.write('last_pos: ' + str(self.last_pos) + '\n')
+def callback(hwnd, msg, wParam, lParam):
+    if msg == WM_IME_STARTCOMPOSITION:
+        set_inline_position(hwnd, last_pos[0], last_pos[1])
+        import os
+        with open(os.path.expandvars('$HOME/log.txt'), 'a') as f:
+            f.write('last_pos: ' + str(last_pos) + '\n')
+    return None
 
 
 class ImeInlineUpdatePositionCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         if view.window() is None:
-            sublime.status_message('sublimeimeinline: view.window() is None')
+            sublime.status_message('IMESupport: view.window() is None')
             return
         hwnd = view.window().hwnd()
 
@@ -125,9 +113,23 @@ class ImeInlineUpdatePositionCommand(sublime_plugin.TextCommand):
         # sublime.status_message('ime_inline_update_position')
 
 
-# TODO
-# def unload_handler():
-#     windows_subclass.term()
+class ImeInlineEventListener(sublime_plugin.EventListener):
+    def on_selection_modified(self, view):
+        if view.window() is None:
+            sublime.status_message('IMESupport: view.window() is None')
+            return
+
+        global last_pos
+        last_pos = calc_position(view)
 
 
-initialized = False
+class _ImeSupportWindowSetupCommand(sublime_plugin.WindowCommand):
+    def __init__(self, window):
+        print('IMESupport: subclass.setup')
+        subclass.setup(window.hwnd(), callback)
+
+    def is_enabled(self):
+        return False
+
+    def is_visible(self):
+        return False

@@ -10,8 +10,13 @@ subclass_map = {}  # {HWND: {'orig': ORIGINAL_WINPROC, 'callback': CALLBACK}}
 
 
 def proc_func(hwnd, msg, wParam, lParam):
-    if hwnd in subclass_map:
-        subclass_map[hwnd]['callback'](hwnd, msg, wParam, lParam)
+    try:
+        if hwnd in subclass_map:
+            ret = subclass_map[hwnd]['callback'](hwnd, msg, wParam, lParam)
+            if ret is not None:
+                return ret
+    except:
+        pass
     return ctypes.windll.user32.CallWindowProcW(
         subclass_map[hwnd]['orig'], hwnd, msg, wParam, lParam)
 
@@ -46,7 +51,11 @@ def test():
         def test_callback(hwnd, msg, wParam, lParam):
             if msg == win32con.WM_KEYDOWN:
                 print('Subclased OnKeyDown')
+                return 0
+            return None
 
+        setup(hwnd, test_callback)
+        print('after setup', subclass_map)
         setup(hwnd, test_callback)
         print('after setup', subclass_map)
         setup(hwnd, test_callback)

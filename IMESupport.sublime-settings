@@ -1,5 +1,6 @@
 {
-    "imesupport_view_offset_x": 44,
+    "imesupport_view_offset_x": 50,
     "imesupport_view_offset_y": 36,
-    "imesupport_sidebar_width": 30
+    "imesupport_line_numbers_width": 10,
+    "imesupport_default_sidebar_width": 30
 }

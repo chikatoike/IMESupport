@@ -113,6 +113,9 @@ def calc_position(view):
     # sublime.status_message(str(view.viewport_position()))
 
     p = sub(abspoint, offset)
+    if view.settings().get('line_numbers'):
+        p = add(p, (get_setting('imesupport_line_numbers_width', 10), 0))
+    # TODO it can get 'side_bar_width' from .sublime-workspace
     # sublime.status_message(str(p))
 
     offset = (

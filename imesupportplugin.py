@@ -115,28 +115,81 @@ def calc_line_numbers_width(view):
     return c * get_setting('imesupport_line_numbers_char_width', 6)
 
 
+def get_layout_rowcol(layout):
+    c = len(layout['cols']) - 1
+    r = len(layout['rows']) - 1
+    return (r, c)
+
+
+def get_group_rowcol(layout, group):
+    c = len(layout['cols']) - 1
+    return (group // c, group % c)
+
+
+def make_list2d(lst, cols):
+    assert (len(lst) % cols) == 0
+    return [lst[i * cols:(i + 1) * cols] for i in range(len(lst) / cols)]
+
+
+def calc_view_offset(window, layout, extents, group_row, group_col):
+    _, c = get_layout_rowcol(layout)
+    l2d = make_list2d(extents, c)
+    # print('calc_view_offset', group_row, group_col)
+    # print('calc_view_offset', c, r, layout, l2d)
+    # for y in range(r):
+    #     for x in range(c):
+    #         unitx = l2d[y][x][0] / layout['cols'][x + 1]
+    #         unity = l2d[y][x][1] / layout['rows'][y + 1]
+    #         print('calc_view_offset', x, y, unitx, unity)
+    # unitx = extents[0][0] / layout['cols'][1]
+    # unity = extents[0][1] / layout['rows'][1]
+    # posx = layout['cols'][group_col]
+    # posy = layout['rows'][group_row]
+    # # print('calc_view_offset', unitx, unity, posx, posy)
+    # return (posx * unitx, posy * unity)
+    posx = 0.0
+    posy = 0
+    for y in range(group_row):
+        posy += l2d[y][group_col][1]
+    for x in range(group_col):
+        posx += l2d[group_row][x][0]
+        posx += get_setting('imesupport_default_minimap_width', 80)
+        # print('calc_view_offset', posx, posy)
+    for x in range(group_col + 1):
+        group = x + group_row * c
+        view = window.active_view_in_group(group)
+        if view.settings().get('line_numbers'):
+            posx += calc_line_numbers_width(view)
+            print('calc_view_offset', posx, posy, group)
+    return posx, posy
+
+
+def get_current_view_offset(view):
+    window = view.window()
+    layout = window.get_layout()
+    view_groups = [window.active_view_in_group(g) for g in range(window.num_groups())]
+    extents = [(0.0, 0.0) if v is None else v.viewport_extent() for v in view_groups]
+    row, col = get_group_rowcol(layout, window.active_group())
+    return calc_view_offset(window, layout, extents, row, col)
+
+
 def calc_position(view):
     point = view.sel()[0].a
     abspoint = view.text_to_layout(point)
     offset = view.viewport_position()
 
-    # sublime.status_message(str(view.text_to_layout(point)))
-    # sublime.status_message(str(view.viewport_position()))
-
     p = sub(abspoint, offset)
-    if view.settings().get('line_numbers'):
-        p = add(p, (calc_line_numbers_width(view), 0))
+    p = add(p, get_current_view_offset(view))
     # TODO it can get 'side_bar_width' from .sublime-workspace
     # p[0] += get_setting('imesupport_default_sidebar_width', 0)
 
-    offset = (
+    p = add(p, (
         get_setting('imesupport_view_offset_x', 44),
-        get_setting('imesupport_view_offset_y', 36))
-    font_face = view.settings().get('font_face', 10)
-    font_size = int(view.settings().get('font_size', 10))
+        get_setting('imesupport_view_offset_y', 36)))
+    font_face = view.settings().get('font_face', '')
+    font_size = int(view.settings().get('font_size', 11))
 
-    p = add(p, offset)
-    sublime.status_message(str(p))
+    sublime.status_message('IMESupport: ' + str(p))
     return (int(p[0]), int(p[1]), font_face, font_size)
 
 
@@ -175,6 +228,8 @@ class ImeInlineUpdatePositionCommand(sublime_plugin.TextCommand):
             return
         hwnd = view.window().hwnd()
 
+        # FIXME not work If the same file is open in multiple tabs.
+
         p = calc_position(view)
         set_inline_position(hwnd, int(p[0]), int(p[1]))
         # sublime.status_message('ime_inline_update_position')
@@ -191,7 +246,7 @@ class ImeInlineEventListener(sublime_plugin.EventListener):
 
 class _ImeSupportWindowSetupCommand(sublime_plugin.WindowCommand):
     def __init__(self, window):
-        print('IMESupport: subclass.setup')
+        # print('IMESupport: subclass.setup')
         subclass.setup(window.hwnd(), callback)
 
     def is_enabled(self):

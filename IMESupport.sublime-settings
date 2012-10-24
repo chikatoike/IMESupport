@@ -1,8 +1,20 @@
 {
-    "imesupport_view_offset_x": 40,
-    "imesupport_view_offset_y": 26,
-    "imesupport_line_numbers_char_width": 6,
-    "imesupport_default_tabs_height": 10,
-    "imesupport_default_minimap_width": 80,
-    "imesupport_default_sidebar_width": 0
+    "imesupport_offset_x": 0,
+    "imesupport_offset_y": 0,
+    "imesupport_view_frame_left": 18,
+    "imesupport_view_frame_right": 16,
+    "imesupport_line_numbers_char_width": 8,
+    "imesupport_minimap_width": 80,
+    "imesupport_tabs_height": 36,
+
+    "imesupport_show_minimap": true,
+    "imesupport_show_tabs": true,
+    "imesupport_side_bar_visible": false,
+    "imesupport_side_bar_width": 200
+
+    // You can write this option to .sublime-project.
+    // "settings":
+    // {
+    //     "imesupport_workspace_path": "/path/to/workspace.sublime-workspace"
+    // }
 }

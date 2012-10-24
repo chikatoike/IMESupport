@@ -111,8 +111,8 @@ def get_number_column(n):
 
 def calc_line_numbers_width(view):
     lines, _ = view.rowcol(view.size())
-    c = get_number_column(lines + 1)
-    return c * get_setting('imesupport_line_numbers_char_width', 6)
+    c = get_number_column(lines + 1) + 2
+    return c * get_setting('imesupport_line_numbers_char_width')
 
 
 def get_layout_rowcol(layout):
@@ -134,36 +134,31 @@ def make_list2d(lst, cols):
 def calc_view_offset(window, layout, extents, group_row, group_col):
     _, c = get_layout_rowcol(layout)
     l2d = make_list2d(extents, c)
-    # print('calc_view_offset', group_row, group_col)
-    # print('calc_view_offset', c, r, layout, l2d)
-    # for y in range(r):
-    #     for x in range(c):
-    #         unitx = l2d[y][x][0] / layout['cols'][x + 1]
-    #         unity = l2d[y][x][1] / layout['rows'][y + 1]
-    #         print('calc_view_offset', x, y, unitx, unity)
-    # unitx = extents[0][0] / layout['cols'][1]
-    # unity = extents[0][1] / layout['rows'][1]
-    # posx = layout['cols'][group_col]
-    # posy = layout['rows'][group_row]
-    # # print('calc_view_offset', unitx, unity, posx, posy)
-    # return (posx * unitx, posy * unity)
     posx = 0.0
     posy = 0
+
     for y in range(group_row):
         posy += l2d[y][group_col][1]
+
+    for y in range(group_row + 1):
+        if get_setting('imesupport_show_tabs'):
+            posy += get_setting('imesupport_tabs_height')
+
     for x in range(group_col):
         posx += l2d[group_row][x][0]
-        posx += get_setting('imesupport_default_minimap_width', 80)
-        # print('calc_view_offset', posx, posy)
-    for y in range(group_row + 1):
-        posy += get_setting('imesupport_default_tabs_height', 10)
-        # print('calc_view_offset', posx, posy)
+        if get_setting('imesupport_show_minimap'):
+            posx += get_setting('imesupport_minimap_width')
+        posx += get_setting('imesupport_view_frame_right')
+
     for x in range(group_col + 1):
+        posx += get_setting('imesupport_view_frame_left')
         group = x + group_row * c
         view = window.active_view_in_group(group)
         if view.settings().get('line_numbers'):
             posx += calc_line_numbers_width(view)
-            # print('calc_view_offset', posx, posy, group)
+        else:
+            posx += get_setting('imesupport_line_numbers_char_width') * 2
+
     return posx, posy
 
 
@@ -184,11 +179,12 @@ def calc_position(view):
     p = sub(abspoint, offset)
     p = add(p, get_current_view_offset(view))
     # TODO it can get 'side_bar_width' from .sublime-workspace
-    # p[0] += get_setting('imesupport_default_sidebar_width', 0)
+    if get_setting('imesupport_side_bar_visible'):
+        p[0] += get_setting('imesupport_side_bar_width')
 
     p = add(p, (
-        get_setting('imesupport_view_offset_x', 44),
-        get_setting('imesupport_view_offset_y', 26)))
+        get_setting('imesupport_offset_x'),
+        get_setting('imesupport_offset_y')))
     font_face = view.settings().get('font_face', '')
     font_size = int(view.settings().get('font_size', 11))
 

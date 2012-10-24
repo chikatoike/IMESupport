@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import math
 import sublime
 import sublime_plugin
 from imesupport import subclass
@@ -27,16 +28,16 @@ from ctypes.wintypes import BYTE, LONG
 WM_IME_STARTCOMPOSITION = 0x10D
 
 
-def add(pos, factor):
-    return (pos[0] + factor[0], pos[1] + factor[1])
+def add(a, b):
+    return (a[0] + b[0], a[1] + b[1])
 
 
-def sub(pos, factor):
-    return (pos[0] - factor[0], pos[1] - factor[1])
+def sub(a, b):
+    return (a[0] - b[0], a[1] - b[1])
 
 
-def mul(pos, factor):
-    return (pos[0] * factor[0], pos[1] * factor[1])
+def mul(a, b):
+    return (a[0] * b[0], a[1] * b[1])
 
 
 class COMPOSITIONFORM(Structure):
@@ -104,6 +105,16 @@ def set_inline_position(hwnd, x, y, font_face, font_size):
     windll.imm32.ImmReleaseContext(hwnd, hIMC)
 
 
+def get_number_column(n):
+    return int(math.log10(n)) + 1
+
+
+def calc_line_numbers_width(view):
+    lines, _ = view.rowcol(view.size())
+    c = get_number_column(lines + 1)
+    return c * get_setting('imesupport_line_numbers_char_width', 6)
+
+
 def calc_position(view):
     point = view.sel()[0].a
     abspoint = view.text_to_layout(point)
@@ -114,9 +125,9 @@ def calc_position(view):
 
     p = sub(abspoint, offset)
     if view.settings().get('line_numbers'):
-        p = add(p, (get_setting('imesupport_line_numbers_width', 10), 0))
+        p = add(p, (calc_line_numbers_width(view), 0))
     # TODO it can get 'side_bar_width' from .sublime-workspace
-    # sublime.status_message(str(p))
+    # p[0] += get_setting('imesupport_default_sidebar_width', 0)
 
     offset = (
         get_setting('imesupport_view_offset_x', 44),
@@ -133,18 +144,27 @@ def get_setting(key, default=None):
     return sublime.load_settings('IMESupport.sublime-settings').get(key, default)
 
 
-last_pos = (0, 0)
+last_pos = ()
 
 def callback(hwnd, msg, wParam, lParam):
     if msg == WM_IME_STARTCOMPOSITION:
         try:
-            set_inline_position(hwnd, *last_pos)
+            if len(last_pos) > 0:
+                set_inline_position(hwnd, *last_pos)
         except Exception, e:
             import os
             with open(os.path.expandvars('$HOME/log.txt'), 'a') as f:
                 f.write('last_pos: ' + str(last_pos) + '\n')
                 f.write('Exception: ' + str(e) + '\n')
     return None
+
+
+def register_callback(view):
+    if view.window() is None:
+        sublime.status_message('IMESupport: view.window() is None')
+        return False
+    subclass.setup(view.window().hwnd(), callback)
+    return True
 
 
 class ImeInlineUpdatePositionCommand(sublime_plugin.TextCommand):
@@ -162,8 +182,7 @@ class ImeInlineUpdatePositionCommand(sublime_plugin.TextCommand):
 
 class ImeInlineEventListener(sublime_plugin.EventListener):
     def on_selection_modified(self, view):
-        if view.window() is None:
-            sublime.status_message('IMESupport: view.window() is None')
+        if not register_callback(view):
             return
 
         global last_pos

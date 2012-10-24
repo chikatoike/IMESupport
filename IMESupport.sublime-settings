@@ -1,7 +1,8 @@
 {
     "imesupport_view_offset_x": 40,
-    "imesupport_view_offset_y": 36,
+    "imesupport_view_offset_y": 26,
     "imesupport_line_numbers_char_width": 6,
+    "imesupport_default_tabs_height": 10,
     "imesupport_default_minimap_width": 80,
     "imesupport_default_sidebar_width": 0
 }

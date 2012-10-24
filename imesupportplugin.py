@@ -155,12 +155,15 @@ def calc_view_offset(window, layout, extents, group_row, group_col):
         posx += l2d[group_row][x][0]
         posx += get_setting('imesupport_default_minimap_width', 80)
         # print('calc_view_offset', posx, posy)
+    for y in range(group_row + 1):
+        posy += get_setting('imesupport_default_tabs_height', 10)
+        # print('calc_view_offset', posx, posy)
     for x in range(group_col + 1):
         group = x + group_row * c
         view = window.active_view_in_group(group)
         if view.settings().get('line_numbers'):
             posx += calc_line_numbers_width(view)
-            print('calc_view_offset', posx, posy, group)
+            # print('calc_view_offset', posx, posy, group)
     return posx, posy
 
 
@@ -185,7 +188,7 @@ def calc_position(view):
 
     p = add(p, (
         get_setting('imesupport_view_offset_x', 44),
-        get_setting('imesupport_view_offset_y', 36)))
+        get_setting('imesupport_view_offset_y', 26)))
     font_face = view.settings().get('font_face', '')
     font_size = int(view.settings().get('font_size', 11))
 

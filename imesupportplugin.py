@@ -105,14 +105,52 @@ def set_inline_position(hwnd, x, y, font_face, font_size):
     windll.imm32.ImmReleaseContext(hwnd, hIMC)
 
 
+# from http://d.hatena.ne.jp/hush_puppy/20090226/1235661269
+def width_kana(str):
+    all = len(str)
+    zenkaku = count_zen(str)
+    hankaku = all - zenkaku
+    return zenkaku * 2 + hankaku
+
+
+try:
+    # FIXME import error?
+    import unicodedata
+
+    def count_zen(str):
+        n = 0
+        for c in str:
+            wide_chars = u"WFA"
+            eaw = unicodedata.east_asian_width(c)
+            if wide_chars.find(eaw) > -1:
+                n += 1
+        return n
+except ImportError:
+    def count_zen(str):
+        return len(str)
+
+
+def get_char_width(view):
+    r = view.find('.', 0)
+    if r is None:
+        return 8.0  # Default char width
+    text = view.substr(r)
+    p1 = view.text_to_layout(r.begin())
+    p2 = view.text_to_layout(r.end())
+    assert p1[1] == p2[1]
+    width = p2[0] - p1[0]
+    count = width_kana(text)
+    return width / count
+
+
 def get_number_column(n):
     return int(math.log10(n)) + 1
 
 
-def calc_line_numbers_width(view):
+def calc_line_numbers_width(view, char_width):
     lines, _ = view.rowcol(view.size())
     c = get_number_column(lines + 1) + 2
-    return c * get_setting('imesupport_line_numbers_char_width')
+    return c * char_width
 
 
 def get_layout_rowcol(layout):
@@ -150,14 +188,16 @@ def calc_view_offset(window, layout, extents, group_row, group_col):
             posx += get_setting('imesupport_minimap_width')
         posx += get_setting('imesupport_view_frame_right')
 
+    char_width = get_char_width(window.active_view())
+
     for x in range(group_col + 1):
         posx += get_setting('imesupport_view_frame_left')
         group = x + group_row * c
         view = window.active_view_in_group(group)
         if view.settings().get('line_numbers'):
-            posx += calc_line_numbers_width(view)
+            posx += calc_line_numbers_width(view, char_width)
         else:
-            posx += get_setting('imesupport_line_numbers_char_width') * 2
+            posx += char_width * 2
 
     return posx, posy
 
@@ -219,6 +259,13 @@ def register_callback(view):
     return True
 
 
+def update_position(view):
+    if not register_callback(view):
+        return
+    global last_pos
+    last_pos = calc_position(view)
+
+
 class ImeInlineUpdatePositionCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
@@ -235,18 +282,18 @@ class ImeInlineUpdatePositionCommand(sublime_plugin.TextCommand):
 
 
 class ImeInlineEventListener(sublime_plugin.EventListener):
-    def on_selection_modified(self, view):
-        if not register_callback(view):
-            return
+    def on_activated(self, view):
+        update_position(view)
 
-        global last_pos
-        last_pos = calc_position(view)
+    def on_selection_modified(self, view):
+        update_position(view)
 
 
 class _ImeSupportWindowSetupCommand(sublime_plugin.WindowCommand):
     def __init__(self, window):
         # print('IMESupport: subclass.setup')
         subclass.setup(window.hwnd(), callback)
+        # print('get_char_width', get_char_width(window.active_view()))
 
     def is_enabled(self):
         return False

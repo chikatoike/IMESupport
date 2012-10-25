@@ -172,21 +172,21 @@ def make_list2d(lst, cols):
 def calc_view_offset(window, layout, extents, group_row, group_col):
     _, c = get_layout_rowcol(layout)
     l2d = make_list2d(extents, c)
-    posx = 0.0
-    posy = 0
+    offx = []
+    offy = []
 
     for y in range(group_row):
-        posy += l2d[y][group_col][1]
+        offy.append(l2d[y][group_col][1])
 
     for y in range(group_row + 1):
         if get_setting('imesupport_show_tabs'):
-            posy += get_setting('imesupport_tabs_height')
+            offy.append(get_setting('imesupport_tabs_height'))
 
     for x in range(group_col):
-        posx += l2d[group_row][x][0]
+        offx.append(l2d[group_row][x][0])
         if get_setting('imesupport_show_minimap'):
-            posx += get_setting('imesupport_minimap_width')
-        posx += get_setting('imesupport_view_frame_right')
+            offx.append(get_setting('imesupport_minimap_width'))
+        offx.append(get_setting('imesupport_view_frame_right'))
 
     if window.active_view() is not None:
         char_width = get_char_width(window.active_view())
@@ -194,15 +194,15 @@ def calc_view_offset(window, layout, extents, group_row, group_col):
         char_width = 0
 
     for x in range(group_col + 1):
-        posx += get_setting('imesupport_view_frame_left')
+        offx.append(get_setting('imesupport_view_frame_left'))
         group = x + group_row * c
         view = window.active_view_in_group(group)
         if view.settings().get('line_numbers'):
-            posx += calc_line_numbers_width(view, char_width)
+            offx.append(calc_line_numbers_width(view, char_width))
         else:
-            posx += char_width * 2
+            offx.append(char_width * 2)
 
-    return posx, posy
+    return offx, offy
 
 
 def get_current_view_offset(view):
@@ -220,18 +220,19 @@ def calc_position(view):
     offset = view.viewport_position()
 
     p = sub(abspoint, offset)
-    p = add(p, get_current_view_offset(view))
+    offset = get_current_view_offset(view)
     # TODO it can get 'side_bar_width' from .sublime-workspace
     if get_setting('imesupport_side_bar_visible'):
-        p[0] += get_setting('imesupport_side_bar_width')
+        offset[0].append(get_setting('imesupport_side_bar_width'))
 
-    p = add(p, (
-        get_setting('imesupport_offset_x'),
-        get_setting('imesupport_offset_y')))
+    offset[0].append(get_setting('imesupport_offset_x'))
+    offset[1].append(get_setting('imesupport_offset_y'))
+    p = add(p, (sum(offset[0]), sum(offset[1])))
+
     font_face = view.settings().get('font_face', '')
     font_size = int(view.settings().get('font_size', 11))
 
-    sublime.status_message('IMESupport: ' + str(p))
+    sublime.status_message('IMESupport: ' + str(p) + repr(offset))
     return (int(p[0]), int(p[1]), font_face, font_size)
 
 

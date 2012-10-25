@@ -10,10 +10,4 @@
     "imesupport_show_tabs": true,
     "imesupport_side_bar_visible": false,
     "imesupport_side_bar_width": 200
-
-    // You can write this option to .sublime-project.
-    // "settings":
-    // {
-    //     "imesupport_workspace_path": "/path/to/workspace.sublime-workspace"
-    // }
 }

@@ -133,7 +133,7 @@ except ImportError:
 def get_char_width(view):
     r = view.find('.', 0)
     if r is None:
-        return 8.0  # Default char width
+        return 8  # Default char width
     text = view.substr(r)
     p1 = view.text_to_layout(r.begin())
     p2 = view.text_to_layout(r.end())
@@ -188,7 +188,10 @@ def calc_view_offset(window, layout, extents, group_row, group_col):
             posx += get_setting('imesupport_minimap_width')
         posx += get_setting('imesupport_view_frame_right')
 
-    char_width = get_char_width(window.active_view())
+    if window.active_view() is not None:
+        char_width = get_char_width(window.active_view())
+    else:
+        char_width = 0
 
     for x in range(group_col + 1):
         posx += get_setting('imesupport_view_frame_left')

@@ -105,33 +105,35 @@ def set_inline_position(hwnd, x, y, font_face, font_size):
     windll.imm32.ImmReleaseContext(hwnd, hIMC)
 
 
-# from http://d.hatena.ne.jp/hush_puppy/20090226/1235661269
-def width_kana(str):
-    all = len(str)
-    zenkaku = count_zen(str)
-    hankaku = all - zenkaku
-    return zenkaku * 2 + hankaku
+# # from http://d.hatena.ne.jp/hush_puppy/20090226/1235661269
+# def width_kana(str):
+#     all = len(str)
+#     zenkaku = count_zen(str)
+#     hankaku = all - zenkaku
+#     return zenkaku * 2 + hankaku
 
 
-try:
-    # FIXME import error?
-    import unicodedata
+# try:
+#     # FIXME import error
+#     # known bug: http://www.sublimetext.com/forum/viewtopic.php?f=3&t=3462
+#     import unicodedata
 
-    def count_zen(str):
-        n = 0
-        for c in str:
-            wide_chars = u"WFA"
-            eaw = unicodedata.east_asian_width(c)
-            if wide_chars.find(eaw) > -1:
-                n += 1
-        return n
-except ImportError:
-    def count_zen(str):
-        return len(str)
+#     def count_zen(str):
+#         n = 0
+#         for c in str:
+#             wide_chars = u"WFA"
+#             eaw = unicodedata.east_asian_width(c)
+#             if wide_chars.find(eaw) > -1:
+#                 n += 1
+#         return n
+# except ImportError:
+#     def count_zen(str):
+#         return 0
 
 
 def get_char_width(view):
-    r = view.find('.', 0)
+    # Find half width char.
+    r = view.find(r'^[\x20-\x7E]+$', 0)
     if r is None:
         return 8  # Default char width
     text = view.substr(r)
@@ -139,7 +141,7 @@ def get_char_width(view):
     p2 = view.text_to_layout(r.end())
     assert p1[1] == p2[1]
     width = p2[0] - p1[0]
-    count = width_kana(text)
+    count = len(text)
     return width / count
 
 
@@ -218,8 +220,8 @@ def calc_position(view):
     point = view.sel()[0].a
     abspoint = view.text_to_layout(point)
     offset = view.viewport_position()
-
     p = sub(abspoint, offset)
+
     offset = get_current_view_offset(view)
     # TODO it can get 'side_bar_width' from .sublime-workspace
     if get_setting('imesupport_side_bar_visible'):

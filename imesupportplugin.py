@@ -105,32 +105,6 @@ def set_inline_position(hwnd, x, y, font_face, font_size):
     windll.imm32.ImmReleaseContext(hwnd, hIMC)
 
 
-# # from http://d.hatena.ne.jp/hush_puppy/20090226/1235661269
-# def width_kana(str):
-#     all = len(str)
-#     zenkaku = count_zen(str)
-#     hankaku = all - zenkaku
-#     return zenkaku * 2 + hankaku
-
-
-# try:
-#     # FIXME import error
-#     # known bug: http://www.sublimetext.com/forum/viewtopic.php?f=3&t=3462
-#     import unicodedata
-
-#     def count_zen(str):
-#         n = 0
-#         for c in str:
-#             wide_chars = u"WFA"
-#             eaw = unicodedata.east_asian_width(c)
-#             if wide_chars.find(eaw) > -1:
-#                 n += 1
-#         return n
-# except ImportError:
-#     def count_zen(str):
-#         return 0
-
-
 def get_char_width(view):
     # Find half width char.
     r = view.find(r'^[\x20-\x7E]+$', 0)

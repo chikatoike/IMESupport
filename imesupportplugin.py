@@ -251,7 +251,7 @@ def update_position(view):
 class WindowLayout(object):
     def __init__(self, window):
         self.window = window
-        self.last_extents = WindowLayout.get_extent_list(window)
+        self.last_extents = None
         self.load_settings()
 
     def calc_cursor_position(self, view, cursor):
@@ -274,7 +274,7 @@ class WindowLayout(object):
         sublime.status_message('IMESupport: ' + str(p) + repr(offset))
         return (int(p[0]), int(p[1]), font_face, font_size)
 
-    def update_status(self):
+    def update_status(self, view=None):
         extents = WindowLayout.get_extent_list(self.window)
         if extents == self.last_extents:
             return  # layout is not changed.
@@ -282,15 +282,14 @@ class WindowLayout(object):
 
         # Get status.
         self.load_settings()
-        self.get_status()
+        self.get_status(view)
 
-    def get_status(self):
+    def get_status(self, view=None):
         window = self.window
-        if window is None:
-            return None
-        view = window.active_view()
         if view is None:
-            return None
+            view = window.active_view()
+            if view is None:
+                return None
 
         self.tabs = WindowLayout.tabs_status(window, view)
         self.minimap = WindowLayout.minimap_status(window, view)
@@ -324,8 +323,8 @@ class WindowLayout(object):
         offset = [[], []]
         offset[0] += self.calc_group_offset_width(g2d, col)
         offset[1] += self.calc_group_offset_height(g2d, row)
-        offset[0] += self.calc_view_width_offset(g2d, view)
-        offset[1] += self.calc_view_height_offset(g2d, view)
+        offset[0] += self.calc_view_width_offset(view)
+        offset[1] += self.calc_view_height_offset(view)
         return offset
 
     def side_bar_status(self, window):
@@ -389,7 +388,7 @@ class WindowLayout(object):
             ]
 
     def calc_view_height_offset(self, view):
-        return [self.tabs['width'] if self.tabs['visible'] else 0]
+        return [self.tabs['height'] if self.tabs['visible'] else 0]
 
     def calc_view_height(self, view):
         # TODO plus horizontal scroll bar height
@@ -526,19 +525,39 @@ class ImeSupportGetMeasureCommand(sublime_plugin.WindowCommand):
 
 
 class ImeInlineEventListener(sublime_plugin.EventListener):
+    def __init__(self):
+        self.layouts = {}
+
     def on_activated(self, view):
-        update_position(view)
+        self.update(view)
 
     def on_selection_modified(self, view):
-        update_position(view)
+        self.update(view)
+
+    def update(self, view):
+        if view is None:
+            return
+        window = view.window()
+        if window is None:
+            return
+
+        subclass.setup(view.window().hwnd(), callback)
+
+        id = window.id()
+        if id not in self.layouts:
+            self.layouts[id] = WindowLayout(window)
+
+        global last_pos
+        self.layouts[id].update_status(view)
+        last_pos = self.layouts[id].calc_cursor_position(view, view.sel()[0].a)
 
 
-class _ImeSupportWindowSetupCommand(sublime_plugin.WindowCommand):
-    def __init__(self, window):
-        subclass.setup(window.hwnd(), callback)
+# class _ImeSupportWindowSetupCommand(sublime_plugin.WindowCommand):
+#     def __init__(self, window):
+#         subclass.setup(window.hwnd(), callback)
 
-    def is_enabled(self):
-        return False
+#     def is_enabled(self):
+#         return False
 
-    def is_visible(self):
-        return False
+#     def is_visible(self):
+#         return False

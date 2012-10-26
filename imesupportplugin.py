@@ -248,19 +248,281 @@ def update_position(view):
     last_pos = calc_position(view)
 
 
-class ImeInlineUpdatePositionCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        view = self.view
-        if view.window() is None:
-            sublime.status_message('IMESupport: view.window() is None')
+class WindowLayout(object):
+    def __init__(self, window):
+        self.window = window
+        self.last_extents = WindowLayout.get_extent_list(window)
+        self.load_settings()
+
+    def calc_cursor_position(self, view, cursor):
+        abspoint = view.text_to_layout(cursor)
+        offset = view.viewport_position()
+        p = sub(abspoint, offset)
+
+        offset = self.calc_offset(self.window, view)
+
+        if self.side_bar['visible']:
+            offset[0].append(self.side_bar['width'])
+
+        offset[0].append(get_setting('imesupport_offset_x'))
+        offset[1].append(get_setting('imesupport_offset_y'))
+        p = add(p, (sum(offset[0]), sum(offset[1])))
+
+        font_face = view.settings().get('font_face', '')
+        font_size = int(view.settings().get('font_size', 11))
+
+        sublime.status_message('IMESupport: ' + str(p) + repr(offset))
+        return (int(p[0]), int(p[1]), font_face, font_size)
+
+    def update_status(self):
+        extents = WindowLayout.get_extent_list(self.window)
+        if extents == self.last_extents:
+            return  # layout is not changed.
+        self.last_extents = extents
+
+        # Get status.
+        self.load_settings()
+        self.get_status()
+
+    def get_status(self):
+        window = self.window
+        if window is None:
+            return None
+        view = window.active_view()
+        if view is None:
+            return None
+
+        self.tabs = WindowLayout.tabs_status(window, view)
+        self.minimap = WindowLayout.minimap_status(window, view)
+        self.line_numbers = WindowLayout.line_numbers_status(view)
+
+        # Required self.minimap, self.line_numbers
+        self.side_bar = self.side_bar_status(window)
+
+        return {
+            'side_bar': self.side_bar,
+            'tabs': self.tabs,
+            'minimap': self.minimap,
+            'line_numbers': self.line_numbers,
+            }
+
+    def load_settings(self):
+        self.settings = sublime.load_settings('IMESupport.sublime-settings')
+
+    def get_setting(self, key, default=None):
+        return self.settings.get(key, default)
+
+    def calc_offset(self, window, view):
+        window = self.window
+        group, _ = window.get_view_index(view)
+        layout = window.get_layout()
+
+        _, c = WindowLayout.get_layout_rowcol(layout)
+        g2d = WindowLayout.make_list2d(WindowLayout.get_group_list(window), c)
+        row, col = WindowLayout.get_group_rowcol(layout, group)
+
+        offset = [[], []]
+        offset[0] += self.calc_group_offset_width(g2d, col)
+        offset[1] += self.calc_group_offset_height(g2d, row)
+        offset[0] += self.calc_view_width_offset(g2d, view)
+        offset[1] += self.calc_view_height_offset(g2d, view)
+        return offset
+
+    def side_bar_status(self, window):
+        window = self.window
+        layout = window.get_layout()
+
+        r, c = WindowLayout.get_layout_rowcol(layout)
+        g2d = WindowLayout.make_list2d(WindowLayout.get_group_list(window), c)
+
+        offset1 = self.calc_group_offset_width(g2d, c)
+        window.run_command('toggle_side_bar')
+        offset2 = self.calc_group_offset_width(g2d, c)
+        window.run_command('toggle_side_bar')
+        diff = sum(offset2) - sum(offset1)
+        width = abs(diff)
+        print('side_bar_status: ' + str(offset1))
+        # TODO
+        # if c > 1:
+        #     width += self.get_setting('imesupport_view_frame_right') * (c - 1)
+        return {'visible': diff > 0, 'width': width}
+
+    def calc_group_offset_width(self, g2d, group_col):
+        r = len(g2d)
+        ret = []
+        for x in range(group_col):
+            for y in range(r):
+                if g2d[y][x] is not None:
+                    ret += self.calc_view_width(g2d[y][x])
+                    break
+            else:
+                print('WindowLayout.calc_group_offset_width: there is empty view.')
+        return ret
+
+    def calc_group_offset_height(self, g2d, group_row):
+        c = len(g2d[0])
+        ret = []
+        for y in range(group_row):
+            for x in range(c):
+                if g2d[y][x] is not None:
+                    ret += self.calc_view_height(g2d[y][x])
+                    break
+            else:
+                print('WindowLayout.calc_group_offset_height: there is empty view.')
+        return ret
+
+    def get_line_numbers_width(self, view):
+        # TODO get from cache
+        return WindowLayout.line_numbers_status(view)['width']
+
+    def calc_view_width_offset(self, view):
+        return [
+            self.get_setting('imesupport_view_frame_left'),
+            self.get_line_numbers_width(view)
+            ]
+
+    def calc_view_width(self, view):
+        return self.calc_view_width_offset(view) + [
+            view.viewport_extent()[0],
+            (self.minimap['width'] if self.minimap['visible'] else 0),
+            self.get_setting('imesupport_view_frame_right')
+            ]
+
+    def calc_view_height_offset(self, view):
+        return [self.tabs['width'] if self.tabs['visible'] else 0]
+
+    def calc_view_height(self, view):
+        # TODO plus horizontal scroll bar height
+        return self.calc_view_height_offset(view) + [view.viewport_extent()[1]]
+
+    @staticmethod
+    def get_group_list(window):
+        return [window.active_view_in_group(g) for g in range(window.num_groups())]
+
+    @staticmethod
+    def get_extent_list(window):
+        view_groups = [window.active_view_in_group(g) for g in range(window.num_groups())]
+        return [None if v is None else v.viewport_extent() for v in view_groups]
+
+    @staticmethod
+    def tabs_status(window, view):
+        extent1 = view.viewport_extent()
+        window.run_command('toggle_tabs')
+        extent2 = view.viewport_extent()
+        window.run_command('toggle_tabs')
+        diff = extent2[1] - extent1[1]
+        return {'visible': diff > 0, 'height': abs(diff)}
+
+    @staticmethod
+    def is_side_bar_visible(window, view):
+        extent1 = view.viewport_extent()
+        window.run_command('toggle_side_bar')
+        extent2 = view.viewport_extent()
+        window.run_command('toggle_side_bar')
+        diff = extent2[0] - extent1[0]
+        # NOTE Cannot use diff for side_bar width.
+        return {'visible': diff > 0}
+
+    @staticmethod
+    def minimap_status(window, view):
+        extent1 = view.viewport_extent()
+        window.run_command('toggle_minimap')
+        extent2 = view.viewport_extent()
+        window.run_command('toggle_minimap')
+        diff = extent2[0] - extent1[0]
+        return {'visible': diff > 0, 'width': abs(diff)}
+
+    @staticmethod
+    def line_numbers_status(view):
+        visible = view.settings().get('line_numbers')
+        view.settings().set('line_numbers', True)
+        extent1 = view.viewport_extent()
+        view.settings().set('line_numbers', False)
+        extent2 = view.viewport_extent()
+        view.settings().set('line_numbers', visible)
+        diff = extent2[0] - extent1[0]
+
+        char_width = WindowLayout.get_char_width(view) - 1
+        c = WindowLayout.calc_line_numbers_width(view, char_width) + 3
+
+        return {'visible': visible, 'width': abs(diff), 'calc_width': c}
+
+    @staticmethod
+    def get_layout_rowcol(layout):
+        c = len(layout['cols']) - 1
+        r = len(layout['rows']) - 1
+        return (r, c)
+
+    @staticmethod
+    def get_group_rowcol(layout, group):
+        c = len(layout['cols']) - 1
+        return (group // c, group % c)
+
+    @staticmethod
+    def make_list2d(lst, cols):
+        assert (len(lst) % cols) == 0
+        return [lst[i * cols:(i + 1) * cols] for i in range(len(lst) / cols)]
+
+    @staticmethod
+    def get_char_width(view):
+        # Find half width char.
+        # FIXME How to handle double width char? Sometimes it cannot import unicodedata.
+        r = view.find(r'^[\x20-\x7E]+$', 0)
+        if r is None:
+            return 8  # Default char width
+        text = view.substr(r)
+        p1 = view.text_to_layout(r.begin())
+        p2 = view.text_to_layout(r.end())
+        assert p1[1] == p2[1]
+        width = p2[0] - p1[0]
+        count = len(text)
+        return width / count
+
+    @staticmethod
+    def get_number_column(n):
+        return int(math.log10(n)) + 1
+
+    @staticmethod
+    def calc_line_numbers_width(view, char_width):
+        lines, _ = view.rowcol(view.size())
+        c = WindowLayout.get_number_column(lines + 1)
+        return c * char_width
+
+
+class _WindowLayoutTestEventListener(sublime_plugin.EventListener):
+    def __init__(self):
+        window = sublime.active_window()
+        if window is None:
             return
-        hwnd = view.window().hwnd()
+        view = window.active_view()
+        if view is None:
+            return
+        self.test(window, view)
 
-        # FIXME not work If the same file is open in multiple tabs.
+    @staticmethod
+    def test(window, view):
+        print('_WindowLayoutTestEventListener')
+        for k, v in WindowLayout(window).get_status().items():
+            print(k + ': ' + str(v))
 
-        p = calc_position(view)
-        set_inline_position(hwnd, int(p[0]), int(p[1]))
-        # sublime.status_message('ime_inline_update_position')
+
+class ImeSupportGetMeasureCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        _WindowLayoutTestEventListener.test(self.window, self.window.active_view())
+
+# class ImeSupportUpdatePositionCommand(sublime_plugin.TextCommand):
+#     def run(self, edit):
+#         view = self.view
+#         if view.window() is None:
+#             sublime.status_message('IMESupport: view.window() is None')
+#             return
+#         hwnd = view.window().hwnd()
+
+#         # FIXME not work If the same file is open in multiple tabs.
+
+#         p = calc_position(view)
+#         set_inline_position(hwnd, int(p[0]), int(p[1]))
+#         # sublime.status_message('ime_inline_update_position')
 
 
 class ImeInlineEventListener(sublime_plugin.EventListener):
@@ -273,9 +535,7 @@ class ImeInlineEventListener(sublime_plugin.EventListener):
 
 class _ImeSupportWindowSetupCommand(sublime_plugin.WindowCommand):
     def __init__(self, window):
-        # print('IMESupport: subclass.setup')
         subclass.setup(window.hwnd(), callback)
-        # print('get_char_width', get_char_width(window.active_view()))
 
     def is_enabled(self):
         return False

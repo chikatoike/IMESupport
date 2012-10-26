@@ -173,7 +173,9 @@ def calc_view_offset(window, layout, extents, group_row, group_col):
         offx.append(get_setting('imesupport_view_frame_left'))
         group = x + group_row * c
         view = window.active_view_in_group(group)
-        if view.settings().get('line_numbers'):
+        if view is None:
+            offx.append(char_width * 2)
+        elif view.settings().get('line_numbers'):
             offx.append(calc_line_numbers_width(view, char_width))
         else:
             offx.append(char_width * 2)

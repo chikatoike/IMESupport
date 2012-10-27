@@ -243,9 +243,15 @@ class WindowLayout(object):
         return ret
 
     def calc_view_width_offset(self, view):
+        # FIXME not work with Distraction Free Mode.
+        # FIXME Distraction Free Mode width is not fixed value.
+        left_width = (
+            self.get_setting('imesupport_view_left_icon_width')
+            if not self.distraction_free['status'] else
+            self.get_setting('imesupport_view_left_distraction_free_width'))
         line_numbers = self.line_numbers_status(view, self.char_width)
         return [
-            self.get_setting('imesupport_view_left_icon_width'),
+            left_width,
             (line_numbers['width'] if line_numbers['visible'] else 0)
             ]
 
@@ -268,13 +274,10 @@ class WindowLayout(object):
             ]
 
     def line_numbers_status(self, view, char_width):
-        # FIXME not work with Distraction Free Mode.
         # NOTE line numbers is always hidden on Distraction Free Mode.
         if self.distraction_free['status']:
-            # FIXME Cannot get line number width correctly with non-active group.
             # print(imesupportplugin.WindowLayout.line_numbers_status(window.active_view_in_group(0)))
-            diff = WindowLayout.line_numbers_diff(view)
-            return {'visible': diff > 0, 'width': abs(diff), 'mode': 'toggle'}
+            return {'visible': False, 'width': 0, 'mode': 'distraction_free'}
         else:
             visible = view.settings().get('line_numbers')
             width = (WindowLayout.calc_line_numbers_width(view, char_width) + 3
@@ -327,6 +330,7 @@ class WindowLayout(object):
     @staticmethod
     def line_numbers_diff(view):
         """ Detecte Distraction Free Mode using line_numbers. """
+        # FIXME Cannot get line number width correctly with non-active group.
         visible = view.settings().get('line_numbers')
         extent1 = view.viewport_extent()
         view.settings().set('line_numbers', not visible)

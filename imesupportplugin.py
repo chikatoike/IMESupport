@@ -216,6 +216,7 @@ class WindowLayout(object):
         return {'visible': diff > 0, 'width': width}
 
     def calc_group_offset_width(self, g2d, group_col):
+        # FIXME not work with asymmetric splited groups.
         r = len(g2d)
         ret = []
         for x in range(group_col):

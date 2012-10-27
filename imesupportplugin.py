@@ -1,23 +1,8 @@
 # -*- coding: utf-8 -*-
-import math
 import sublime
 import sublime_plugin
+import math
 from imesupport import subclass
-
-
-# Memo
-# >>> window.get_view_index(view)
-# (0, 0)
-# only one view
-# >>> window.get_layout()
-# {'cells': [[0L, 0L, 1L, 1L]], 'rows': [0.0, 1.0], 'cols': [0.0, 1.0]}
-# virtical splited two views
-# >>> window.get_layout()
-# {'cells': [[0L, 0L, 1L, 1L], [1L, 0L, 2L, 1L]], 'rows': [0.0, 1.0], 'cols': [0.0, 0.51641586867305067, 1.0]}
-# virtical splited three views
-# >>> window.get_layout()
-# {'cells': [[0L, 0L, 1L, 1L], [1L, 0L, 2L, 1L], [2L, 0L, 3L, 1L]], 'rows': [0.0, 1.0], 'cols': [0.0, 0.33000000000000002, 0.66000000000000003, 1.0]}
-
 
 import ctypes
 from ctypes import windll, byref
@@ -105,120 +90,8 @@ def set_inline_position(hwnd, x, y, font_face, font_size):
     windll.imm32.ImmReleaseContext(hwnd, hIMC)
 
 
-def get_char_width(view):
-    # Find half width char.
-    r = view.find(r'^[\x20-\x7E]+$', 0)
-    if r is None:
-        return 8  # Default char width
-    text = view.substr(r)
-    p1 = view.text_to_layout(r.begin())
-    p2 = view.text_to_layout(r.end())
-    assert p1[1] == p2[1]
-    width = p2[0] - p1[0]
-    count = len(text)
-    return width / count
-
-
-def get_number_column(n):
-    return int(math.log10(n)) + 1
-
-
-def calc_line_numbers_width(view, char_width):
-    lines, _ = view.rowcol(view.size())
-    c = get_number_column(lines + 1) + 2
-    return c * char_width
-
-
-def get_layout_rowcol(layout):
-    c = len(layout['cols']) - 1
-    r = len(layout['rows']) - 1
-    return (r, c)
-
-
-def get_group_rowcol(layout, group):
-    c = len(layout['cols']) - 1
-    return (group // c, group % c)
-
-
-def make_list2d(lst, cols):
-    assert (len(lst) % cols) == 0
-    return [lst[i * cols:(i + 1) * cols] for i in range(len(lst) / cols)]
-
-
-def calc_view_offset(window, layout, extents, group_row, group_col):
-    _, c = get_layout_rowcol(layout)
-    l2d = make_list2d(extents, c)
-    offx = []
-    offy = []
-
-    for y in range(group_row):
-        offy.append(l2d[y][group_col][1])
-
-    for y in range(group_row + 1):
-        if get_setting('imesupport_show_tabs'):
-            offy.append(get_setting('imesupport_tabs_height'))
-
-    for x in range(group_col):
-        offx.append(l2d[group_row][x][0])
-        if get_setting('imesupport_show_minimap'):
-            offx.append(get_setting('imesupport_minimap_width'))
-        offx.append(get_setting('imesupport_view_frame_right'))
-
-    if window.active_view() is not None:
-        char_width = get_char_width(window.active_view())
-    else:
-        char_width = 0
-
-    for x in range(group_col + 1):
-        offx.append(get_setting('imesupport_view_frame_left'))
-        group = x + group_row * c
-        view = window.active_view_in_group(group)
-        if view is None:
-            offx.append(char_width * 2)
-        elif view.settings().get('line_numbers'):
-            offx.append(calc_line_numbers_width(view, char_width))
-        else:
-            offx.append(char_width * 2)
-
-    return offx, offy
-
-
-def get_current_view_offset(view):
-    window = view.window()
-    layout = window.get_layout()
-    view_groups = [window.active_view_in_group(g) for g in range(window.num_groups())]
-    extents = [(0.0, 0.0) if v is None else v.viewport_extent() for v in view_groups]
-    row, col = get_group_rowcol(layout, window.active_group())
-    return calc_view_offset(window, layout, extents, row, col)
-
-
-def calc_position(view):
-    point = view.sel()[0].a
-    abspoint = view.text_to_layout(point)
-    offset = view.viewport_position()
-    p = sub(abspoint, offset)
-
-    offset = get_current_view_offset(view)
-    # TODO it can get 'side_bar_width' from .sublime-workspace
-    if get_setting('imesupport_side_bar_visible'):
-        offset[0].append(get_setting('imesupport_side_bar_width'))
-
-    offset[0].append(get_setting('imesupport_offset_x'))
-    offset[1].append(get_setting('imesupport_offset_y'))
-    p = add(p, (sum(offset[0]), sum(offset[1])))
-
-    font_face = view.settings().get('font_face', '')
-    font_size = int(view.settings().get('font_size', 11))
-
-    sublime.status_message('IMESupport: ' + str(p) + repr(offset))
-    return (int(p[0]), int(p[1]), font_face, font_size)
-
-
-def get_setting(key, default=None):
-    return sublime.load_settings('IMESupport.sublime-settings').get(key, default)
-
-
 last_pos = ()
+
 
 def callback(hwnd, msg, wParam, lParam):
     if msg == WM_IME_STARTCOMPOSITION:
@@ -231,21 +104,6 @@ def callback(hwnd, msg, wParam, lParam):
                 f.write('last_pos: ' + str(last_pos) + '\n')
                 f.write('Exception: ' + str(e) + '\n')
     return None
-
-
-def register_callback(view):
-    if view.window() is None:
-        sublime.status_message('IMESupport: view.window() is None')
-        return False
-    subclass.setup(view.window().hwnd(), callback)
-    return True
-
-
-def update_position(view):
-    if not register_callback(view):
-        return
-    global last_pos
-    last_pos = calc_position(view)
 
 
 class WindowLayout(object):
@@ -264,8 +122,8 @@ class WindowLayout(object):
         if self.side_bar['visible']:
             offset[0].append(self.side_bar['width'])
 
-        offset[0].append(get_setting('imesupport_offset_x'))
-        offset[1].append(get_setting('imesupport_offset_y'))
+        offset[0].append(self.get_setting('imesupport_offset_x'))
+        offset[1].append(self.get_setting('imesupport_offset_y'))
         p = add(p, (sum(offset[0]), sum(offset[1])))
 
         font_face = view.settings().get('font_face', '')
@@ -391,7 +249,7 @@ class WindowLayout(object):
         return [self.tabs['height'] if self.tabs['visible'] else 0]
 
     def calc_view_height(self, view):
-        # TODO plus horizontal scroll bar height
+        # TODO get from cache
         hscroll_bar = WindowLayout.hscroll_bar_status(view)
         return self.calc_view_height_offset(view) + [
             view.viewport_extent()[1],

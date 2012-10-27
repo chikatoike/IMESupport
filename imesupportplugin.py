@@ -243,12 +243,14 @@ class WindowLayout(object):
         return ret
 
     def calc_view_width_offset(self, view):
-        # FIXME not work with Distraction Free Mode.
-        # FIXME Distraction Free Mode width is not fixed value.
-        left_width = (
-            self.get_setting('imesupport_view_left_icon_width')
-            if not self.distraction_free['status'] else
-            self.get_setting('imesupport_view_left_distraction_free_width'))
+        if self.distraction_free['status']:
+            extent = view.viewport_extent()
+            layout = view.layout_extent()
+            min_width = self.get_setting('imesupport_view_left_distraction_free_width')
+            left_width = max(extent[0] - layout[0], min_width) / 2
+            left_width += 4
+        else:
+            left_width = self.get_setting('imesupport_view_left_icon_width')
         line_numbers = self.line_numbers_status(view, self.char_width)
         return [
             left_width,

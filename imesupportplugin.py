@@ -392,7 +392,7 @@ class WindowLayout(object):
 
     def calc_view_height(self, view):
         # TODO plus horizontal scroll bar height
-        hscroll_bar = WindowLayout.line_numbers_status(view)
+        hscroll_bar = WindowLayout.hscroll_bar_status(view)
         return self.calc_view_height_offset(view) + [
             view.viewport_extent()[1],
             (hscroll_bar['height'] if hscroll_bar['visible'] else 0)

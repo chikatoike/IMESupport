@@ -306,7 +306,7 @@ class WindowLayout(object):
         # view.settings().set('line_numbers', visible)
         # diff = extent2[0] - extent1[0]
 
-        char_width = WindowLayout.get_char_width(view) - 1
+        char_width = WindowLayout.get_char_width(view)
         width = WindowLayout.calc_line_numbers_width(view, char_width) + 3
         return {'visible': visible, 'width': width}
         # return {'visible': visible, 'width': width, 'diff_width': abs(diff)}

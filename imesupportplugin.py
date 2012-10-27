@@ -266,7 +266,6 @@ class WindowLayout(object):
         return [self.tabs['height'] if self.tabs['visible'] else 0]
 
     def calc_view_height(self, view):
-        # TODO get from cache
         hscroll_bar = self.hscroll_bar_status(view)
         return self.calc_view_height_offset(view) + [
             view.viewport_extent()[1],
@@ -283,6 +282,17 @@ class WindowLayout(object):
             width = (WindowLayout.calc_line_numbers_width(view, char_width) + 3
                 if visible else 0)
             return {'visible': visible, 'width': width, 'mode': 'calc'}
+
+    def hscroll_bar_status(self, view):
+        word_wrap = view.settings().get('word_wrap')
+        extent = view.viewport_extent()
+        layout = view.layout_extent()
+        diff = layout[0] - extent[0]
+        return {
+            'visible': diff > 0 and word_wrap != True,
+            'height': self.get_setting('imesupport_view_bottom_hscroll_height'),
+            # 'diff': self.hscroll_bar_diff(view),
+            }
 
     @staticmethod
     def get_group_list(window):
@@ -330,7 +340,7 @@ class WindowLayout(object):
     @staticmethod
     def line_numbers_diff(view):
         """ Detecte Distraction Free Mode using line_numbers. """
-        # FIXME Cannot get line number width correctly with non-active group.
+        # FIXME Cannot get with non-active group.
         visible = view.settings().get('line_numbers')
         extent1 = view.viewport_extent()
         view.settings().set('line_numbers', not visible)
@@ -339,7 +349,8 @@ class WindowLayout(object):
         return extent2[0] - extent1[0]
 
     @staticmethod
-    def hscroll_bar_status(view):
+    def hscroll_bar_diff(view):
+        # FIXME Cannot get with non-active group.
         word_wrap = view.settings().get('word_wrap')
         # Make hscroll bar visible if line is longer than viewport.
         view.settings().set('word_wrap', False)

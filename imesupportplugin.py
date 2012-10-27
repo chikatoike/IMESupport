@@ -152,6 +152,9 @@ class WindowLayout(object):
         self.char_width = self.get_char_width(view)
         self.tabs = self.tabs_status(window, view)
         self.minimap = self.minimap_status(window, view)
+        self.distraction_free = self.distraction_free_status(view)
+
+        # Requires distraction_free
         line_numbers = self.line_numbers_status(view, self.char_width)
         hscroll_bar = self.hscroll_bar_status(view)
 
@@ -162,6 +165,7 @@ class WindowLayout(object):
             'char_width': self.char_width,
             'tabs': self.tabs,
             'minimap': self.minimap,
+            'distraction_free': self.distraction_free,
             'line_numbers': line_numbers,
             'hscroll_bar': hscroll_bar,
             'side_bar': self.side_bar,
@@ -263,6 +267,20 @@ class WindowLayout(object):
             (hscroll_bar['height'] if hscroll_bar['visible'] else 0)
             ]
 
+    def line_numbers_status(self, view, char_width):
+        # FIXME not work with Distraction Free Mode.
+        # NOTE line numbers is always hidden on Distraction Free Mode.
+        if self.distraction_free['status']:
+            # FIXME Cannot get line number width correctly with non-active group.
+            # print(imesupportplugin.WindowLayout.line_numbers_status(window.active_view_in_group(0)))
+            diff = WindowLayout.line_numbers_diff(view)
+            return {'visible': diff > 0, 'width': abs(diff), 'mode': 'toggle'}
+        else:
+            visible = view.settings().get('line_numbers')
+            width = (WindowLayout.calc_line_numbers_width(view, char_width) + 3
+                if visible else 0)
+            return {'visible': visible, 'width': width, 'mode': 'calc'}
+
     @staticmethod
     def get_group_list(window):
         return [window.active_view_in_group(g) for g in range(window.num_groups())]
@@ -282,6 +300,15 @@ class WindowLayout(object):
         return {'visible': diff > 0, 'height': abs(diff)}
 
     @staticmethod
+    def minimap_status(window, view):
+        extent1 = view.viewport_extent()
+        window.run_command('toggle_minimap')
+        extent2 = view.viewport_extent()
+        window.run_command('toggle_minimap')
+        diff = extent2[0] - extent1[0]
+        return {'visible': diff > 0, 'width': abs(diff)}
+
+    @staticmethod
     def is_side_bar_visible(window, view):
         extent1 = view.viewport_extent()
         window.run_command('toggle_side_bar')
@@ -292,32 +319,20 @@ class WindowLayout(object):
         return {'visible': diff > 0}
 
     @staticmethod
-    def minimap_status(window, view):
-        extent1 = view.viewport_extent()
-        window.run_command('toggle_minimap')
-        extent2 = view.viewport_extent()
-        window.run_command('toggle_minimap')
-        diff = extent2[0] - extent1[0]
-        return {'visible': diff > 0, 'width': abs(diff)}
+    def distraction_free_status(view):
+        """ Detecte Distraction Free Mode using line_numbers. """
+        diff = WindowLayout.line_numbers_diff(view)
+        return {'status': diff == 0}
 
     @staticmethod
-    def line_numbers_status(view, char_width):
-        # FIXME not work with Distraction Free Mode.
-
+    def line_numbers_diff(view):
+        """ Detecte Distraction Free Mode using line_numbers. """
         visible = view.settings().get('line_numbers')
-        # XXX Cannot get line number width correctly with non-active group.
-        # print(imesupportplugin.WindowLayout.line_numbers_status(window.active_view_in_group(0)))
-        # view.settings().set('line_numbers', True)
-        # extent1 = view.viewport_extent()
-        # view.settings().set('line_numbers', False)
-        # extent2 = view.viewport_extent()
-        # view.settings().set('line_numbers', visible)
-        # diff = extent2[0] - extent1[0]
-
-        width = (WindowLayout.calc_line_numbers_width(view, char_width) + 3
-            if visible else 0)
-        return {'visible': visible, 'width': width}
-        # return {'visible': visible, 'width': width, 'diff_width': abs(diff)}
+        extent1 = view.viewport_extent()
+        view.settings().set('line_numbers', not visible)
+        extent2 = view.viewport_extent()
+        view.settings().set('line_numbers', visible)
+        return extent2[0] - extent1[0]
 
     @staticmethod
     def hscroll_bar_status(view):

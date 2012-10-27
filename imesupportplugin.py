@@ -133,7 +133,7 @@ class WindowLayout(object):
         return (int(p[0]), int(p[1]), font_face, font_size)
 
     def update_status(self, view=None):
-        extents = WindowLayout.get_extent_list(self.window)
+        extents = self.get_extent_list(self.window)
         if extents == self.last_extents:
             return  # layout is not changed.
         self.last_extents = extents
@@ -149,12 +149,12 @@ class WindowLayout(object):
             if view is None:
                 return None
 
-        self.char_width = WindowLayout.get_char_width(view)
+        self.char_width = self.get_char_width(view)
 
-        self.tabs = WindowLayout.tabs_status(window, view)
-        self.minimap = WindowLayout.minimap_status(window, view)
-        self.line_numbers = WindowLayout.line_numbers_status(view, self.char_width)
-        self.hscroll_bar = WindowLayout.hscroll_bar_status(view)
+        self.tabs = self.tabs_status(window, view)
+        self.minimap = self.minimap_status(window, view)
+        self.line_numbers = self.line_numbers_status(view, self.char_width)
+        self.hscroll_bar = self.hscroll_bar_status(view)
 
         # Requires minimap and line_numbers
         self.side_bar = self.side_bar_status(window, view)
@@ -178,10 +178,10 @@ class WindowLayout(object):
         window = self.window
         group, _ = window.get_view_index(view)
         layout = window.get_layout()
-        _, c = WindowLayout.get_layout_rowcol(layout)
+        _, c = self.get_layout_rowcol(layout)
 
-        g2d = WindowLayout.make_list2d(WindowLayout.get_group_list(window), c)
-        row, col = WindowLayout.get_group_rowcol(layout, group)
+        g2d = self.make_list2d(self.get_group_list(window), c)
+        row, col = self.get_group_rowcol(layout, group)
 
         offset = [[], []]
         offset[0] += self.calc_group_offset_width(g2d, col)
@@ -193,17 +193,17 @@ class WindowLayout(object):
     def side_bar_status(self, window, view):
         window = self.window
         layout = window.get_layout()
-        r, c = WindowLayout.get_layout_rowcol(layout)
+        r, c = self.get_layout_rowcol(layout)
 
-        g2d = WindowLayout.make_list2d(WindowLayout.get_group_list(window), c)
+        g2d = self.make_list2d(self.get_group_list(window), c)
         all_views_width1 = self.calc_group_offset_width(g2d, c)
 
         window.run_command('toggle_side_bar')
         temp = self.minimap, self.line_numbers  # backup current
-        self.minimap = WindowLayout.minimap_status(window, view)
-        self.line_numbers = WindowLayout.line_numbers_status(view, self.char_width)
+        self.minimap = self.minimap_status(window, view)
+        self.line_numbers = self.line_numbers_status(view, self.char_width)
 
-        g2d = WindowLayout.make_list2d(WindowLayout.get_group_list(window), c)
+        g2d = self.make_list2d(self.get_group_list(window), c)
         all_views_width2 = self.calc_group_offset_width(g2d, c)
 
         window.run_command('toggle_side_bar')
@@ -241,7 +241,7 @@ class WindowLayout(object):
         return ret
 
     def calc_view_width_offset(self, view):
-        line_numbers = WindowLayout.line_numbers_status(view, self.char_width)
+        line_numbers = self.line_numbers_status(view, self.char_width)
         return [
             self.get_setting('imesupport_view_left_icon_width'),
             (line_numbers['width'] if line_numbers['visible'] else 0)
@@ -259,7 +259,7 @@ class WindowLayout(object):
 
     def calc_view_height(self, view):
         # TODO get from cache
-        hscroll_bar = WindowLayout.hscroll_bar_status(view)
+        hscroll_bar = self.hscroll_bar_status(view)
         return self.calc_view_height_offset(view) + [
             view.viewport_extent()[1],
             (hscroll_bar['height'] if hscroll_bar['visible'] else 0)

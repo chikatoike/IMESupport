@@ -366,42 +366,6 @@ class WindowLayout(object):
         return c * char_width
 
 
-class _WindowLayoutTestEventListener(sublime_plugin.EventListener):
-    def __init__(self):
-        window = sublime.active_window()
-        if window is None:
-            return
-        view = window.active_view()
-        if view is None:
-            return
-        self.test(window, view)
-
-    @staticmethod
-    def test(window, view):
-        print('_WindowLayoutTestEventListener')
-        for k, v in WindowLayout(window).get_status().items():
-            print(k + ': ' + str(v))
-
-
-class ImeSupportGetMeasureCommand(sublime_plugin.WindowCommand):
-    def run(self):
-        _WindowLayoutTestEventListener.test(self.window, self.window.active_view())
-
-# class ImeSupportUpdatePositionCommand(sublime_plugin.TextCommand):
-#     def run(self, edit):
-#         view = self.view
-#         if view.window() is None:
-#             sublime.status_message('IMESupport: view.window() is None')
-#             return
-#         hwnd = view.window().hwnd()
-
-#         # FIXME not work If the same file is open in multiple tabs.
-
-#         p = calc_position(view)
-#         set_inline_position(hwnd, int(p[0]), int(p[1]))
-#         # sublime.status_message('ime_inline_update_position')
-
-
 class ImeInlineEventListener(sublime_plugin.EventListener):
     def __init__(self):
         self.layouts = {}
@@ -430,12 +394,23 @@ class ImeInlineEventListener(sublime_plugin.EventListener):
         last_pos = self.layouts[id].calc_cursor_position(view, view.sel()[0].a)
 
 
-# class _ImeSupportWindowSetupCommand(sublime_plugin.WindowCommand):
-#     def __init__(self, window):
-#         subclass.setup(window.hwnd(), callback)
+class ImeSupportGetMeasureCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        self.test(self.window, self.window.active_view())
 
-#     def is_enabled(self):
-#         return False
+    @staticmethod
+    def test(window, view):
+        print('ImeSupportGetMeasureCommand:')
+        for k, v in WindowLayout(window).get_status().items():
+            print(k + ': ' + str(v))
 
-#     def is_visible(self):
-#         return False
+
+class _WindowLayoutTestEventListener(sublime_plugin.EventListener):
+    def __init__(self):
+        window = sublime.active_window()
+        if window is None:
+            return
+        view = window.active_view()
+        if view is None:
+            return
+        ImeSupportGetMeasureCommand.test(window, view)

@@ -295,18 +295,21 @@ class WindowLayout(object):
 
     @staticmethod
     def line_numbers_status(view):
+        # XXX Cannot get line number width correctly with non-active group.
+        # print(imesupportplugin.WindowLayout.line_numbers_status(window.active_view_in_group(0)))
+
         visible = view.settings().get('line_numbers')
-        view.settings().set('line_numbers', True)
-        extent1 = view.viewport_extent()
-        view.settings().set('line_numbers', False)
-        extent2 = view.viewport_extent()
-        view.settings().set('line_numbers', visible)
-        diff = extent2[0] - extent1[0]
+        # view.settings().set('line_numbers', True)
+        # extent1 = view.viewport_extent()
+        # view.settings().set('line_numbers', False)
+        # extent2 = view.viewport_extent()
+        # view.settings().set('line_numbers', visible)
+        # diff = extent2[0] - extent1[0]
 
         char_width = WindowLayout.get_char_width(view) - 1
-        c = WindowLayout.calc_line_numbers_width(view, char_width) + 3
-
-        return {'visible': visible, 'width': abs(diff), 'calc_width': c}
+        width = WindowLayout.calc_line_numbers_width(view, char_width) + 3
+        return {'visible': visible, 'width': width}
+        # return {'visible': visible, 'width': width, 'diff_width': abs(diff)}
 
     @staticmethod
     def hscroll_bar_status(view):

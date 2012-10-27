@@ -294,15 +294,17 @@ class WindowLayout(object):
         self.tabs = WindowLayout.tabs_status(window, view)
         self.minimap = WindowLayout.minimap_status(window, view)
         self.line_numbers = WindowLayout.line_numbers_status(view)
+        self.hscroll_bar = WindowLayout.hscroll_bar_status(view)
 
         # Required self.minimap, self.line_numbers
         self.side_bar = self.side_bar_status(window)
 
         return {
-            'side_bar': self.side_bar,
             'tabs': self.tabs,
             'minimap': self.minimap,
             'line_numbers': self.line_numbers,
+            'hscroll_bar': self.hscroll_bar,
+            'side_bar': self.side_bar,
             }
 
     def load_settings(self):
@@ -370,14 +372,12 @@ class WindowLayout(object):
                 print('WindowLayout.calc_group_offset_height: there is empty view.')
         return ret
 
-    def get_line_numbers_width(self, view):
-        # TODO get from cache
-        return WindowLayout.line_numbers_status(view)['width']
-
     def calc_view_width_offset(self, view):
+        # TODO get from cache
+        line_numbers = WindowLayout.line_numbers_status(view)
         return [
             self.get_setting('imesupport_view_frame_left'),
-            self.get_line_numbers_width(view)
+            (line_numbers['width'] if line_numbers['visible'] else 0)
             ]
 
     def calc_view_width(self, view):
@@ -392,7 +392,11 @@ class WindowLayout(object):
 
     def calc_view_height(self, view):
         # TODO plus horizontal scroll bar height
-        return self.calc_view_height_offset(view) + [view.viewport_extent()[1]]
+        hscroll_bar = WindowLayout.line_numbers_status(view)
+        return self.calc_view_height_offset(view) + [
+            view.viewport_extent()[1],
+            (hscroll_bar['height'] if hscroll_bar['visible'] else 0)
+            ]
 
     @staticmethod
     def get_group_list(window):
@@ -445,6 +449,19 @@ class WindowLayout(object):
         c = WindowLayout.calc_line_numbers_width(view, char_width) + 3
 
         return {'visible': visible, 'width': abs(diff), 'calc_width': c}
+
+    @staticmethod
+    def hscroll_bar_status(view):
+        word_wrap = view.settings().get('word_wrap')
+        # Make hscroll bar visible if line is longer than viewport.
+        view.settings().set('word_wrap', False)
+        extent1 = view.viewport_extent()
+        # Hide hscroll bar.
+        view.settings().set('word_wrap', True)
+        extent2 = view.viewport_extent()
+        view.settings().set('word_wrap', word_wrap)
+        diff = extent2[1] - extent1[1]
+        return {'visible': diff > 0, 'height': abs(diff)}
 
     @staticmethod
     def get_layout_rowcol(layout):

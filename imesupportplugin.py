@@ -157,7 +157,7 @@ class WindowLayout(object):
         self.hscroll_bar = WindowLayout.hscroll_bar_status(view)
 
         # Requires minimap and line_numbers
-        self.side_bar = self.side_bar_status(window)
+        self.side_bar = self.side_bar_status(window, view)
 
         return {
             'char_width': self.char_width,
@@ -178,8 +178,8 @@ class WindowLayout(object):
         window = self.window
         group, _ = window.get_view_index(view)
         layout = window.get_layout()
-
         _, c = WindowLayout.get_layout_rowcol(layout)
+
         g2d = WindowLayout.make_list2d(WindowLayout.get_group_list(window), c)
         row, col = WindowLayout.get_group_rowcol(layout, group)
 
@@ -190,23 +190,29 @@ class WindowLayout(object):
         offset[1] += self.calc_view_height_offset(view)
         return offset
 
-    def side_bar_status(self, window):
+    def side_bar_status(self, window, view):
         window = self.window
         layout = window.get_layout()
-
         r, c = WindowLayout.get_layout_rowcol(layout)
-        g2d = WindowLayout.make_list2d(WindowLayout.get_group_list(window), c)
 
-        offset1 = self.calc_group_offset_width(g2d, c)
+        g2d = WindowLayout.make_list2d(WindowLayout.get_group_list(window), c)
+        all_views_width1 = self.calc_group_offset_width(g2d, c)
+
         window.run_command('toggle_side_bar')
-        offset2 = self.calc_group_offset_width(g2d, c)
+        temp = self.minimap, self.line_numbers  # backup current
+        self.minimap = WindowLayout.minimap_status(window, view)
+        self.line_numbers = WindowLayout.line_numbers_status(view, self.char_width)
+
+        g2d = WindowLayout.make_list2d(WindowLayout.get_group_list(window), c)
+        all_views_width2 = self.calc_group_offset_width(g2d, c)
+
         window.run_command('toggle_side_bar')
-        diff = sum(offset2) - sum(offset1)
+        self.minimap, self.line_numbers = temp  # restore
+
+        diff = sum(all_views_width2) - sum(all_views_width1)
         width = abs(diff)
-        print('side_bar_status: ' + str(offset1))
-        # TODO
-        # if c > 1:
-        #     width += self.get_setting('imesupport_view_frame_right') * (c - 1)
+        # print('side_bar_status: ' + str(all_views_width1))
+        # print('side_bar_status: ' + str(all_views_width2))
         return {'visible': diff > 0, 'width': width}
 
     def calc_group_offset_width(self, g2d, group_col):

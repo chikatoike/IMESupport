@@ -150,21 +150,20 @@ class WindowLayout(object):
                 return None
 
         self.char_width = self.get_char_width(view)
-
         self.tabs = self.tabs_status(window, view)
         self.minimap = self.minimap_status(window, view)
-        self.line_numbers = self.line_numbers_status(view, self.char_width)
-        self.hscroll_bar = self.hscroll_bar_status(view)
+        line_numbers = self.line_numbers_status(view, self.char_width)
+        hscroll_bar = self.hscroll_bar_status(view)
 
-        # Requires minimap and line_numbers
+        # Requires minimap and char_width
         self.side_bar = self.side_bar_status(window, view)
 
         return {
             'char_width': self.char_width,
             'tabs': self.tabs,
             'minimap': self.minimap,
-            'line_numbers': self.line_numbers,
-            'hscroll_bar': self.hscroll_bar,
+            'line_numbers': line_numbers,
+            'hscroll_bar': hscroll_bar,
             'side_bar': self.side_bar,
             }
 
@@ -199,15 +198,14 @@ class WindowLayout(object):
         all_views_width1 = self.calc_group_offset_width(g2d, c)
 
         window.run_command('toggle_side_bar')
-        temp = self.minimap, self.line_numbers  # backup current
+        temp = self.minimap  # backup current
         self.minimap = self.minimap_status(window, view)
-        self.line_numbers = self.line_numbers_status(view, self.char_width)
 
         g2d = self.make_list2d(self.get_group_list(window), c)
         all_views_width2 = self.calc_group_offset_width(g2d, c)
 
         window.run_command('toggle_side_bar')
-        self.minimap, self.line_numbers = temp  # restore
+        self.minimap = temp  # restore
 
         diff = sum(all_views_width2) - sum(all_views_width1)
         width = abs(diff)
@@ -304,10 +302,11 @@ class WindowLayout(object):
 
     @staticmethod
     def line_numbers_status(view, char_width):
-        # XXX Cannot get line number width correctly with non-active group.
-        # print(imesupportplugin.WindowLayout.line_numbers_status(window.active_view_in_group(0)))
+        # FIXME not work with Distraction Free Mode.
 
         visible = view.settings().get('line_numbers')
+        # XXX Cannot get line number width correctly with non-active group.
+        # print(imesupportplugin.WindowLayout.line_numbers_status(window.active_view_in_group(0)))
         # view.settings().set('line_numbers', True)
         # extent1 = view.viewport_extent()
         # view.settings().set('line_numbers', False)

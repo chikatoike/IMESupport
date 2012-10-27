@@ -234,7 +234,7 @@ class WindowLayout(object):
         # TODO get from cache
         line_numbers = WindowLayout.line_numbers_status(view)
         return [
-            self.get_setting('imesupport_view_frame_left'),
+            self.get_setting('imesupport_view_left_icon_width'),
             (line_numbers['width'] if line_numbers['visible'] else 0)
             ]
 
@@ -242,7 +242,7 @@ class WindowLayout(object):
         return self.calc_view_width_offset(view) + [
             view.viewport_extent()[0],
             (self.minimap['width'] if self.minimap['visible'] else 0),
-            self.get_setting('imesupport_view_frame_right')
+            self.get_setting('imesupport_view_right_vscroll_width')
             ]
 
     def calc_view_height_offset(self, view):

@@ -10,7 +10,9 @@ from ctypes import Structure, c_ulong
 from ctypes.wintypes import RECT, POINT
 from ctypes.wintypes import BYTE, LONG
 
-WM_IME_STARTCOMPOSITION = 0x10D
+WM_IME_STARTCOMPOSITION = 0x10d
+WM_IME_ENDCOMPOSITION = 0x10e
+WM_IME_COMPOSITION = 0x10f
 
 
 def add(a, b):
@@ -91,18 +93,19 @@ def set_inline_position(hwnd, x, y, font_face, font_size):
 
 
 last_pos = ()
+last_set_pos = ()
 
 
 def callback(hwnd, msg, wParam, lParam):
-    if msg == WM_IME_STARTCOMPOSITION:
+    if msg == WM_IME_STARTCOMPOSITION or msg == WM_IME_COMPOSITION:
         try:
-            if len(last_pos) > 0:
+            global last_set_pos
+            if len(last_pos) > 0 and last_pos != last_set_pos:
                 set_inline_position(hwnd, *last_pos)
+                last_set_pos = last_pos
         except Exception, e:
-            import os
-            with open(os.path.expandvars('$HOME/log.txt'), 'a') as f:
-                f.write('last_pos: ' + str(last_pos) + '\n')
-                f.write('Exception: ' + str(e) + '\n')
+            print('last_pos: ' + str(last_pos))
+            print('Exception: ' + str(e))
     return None
 
 

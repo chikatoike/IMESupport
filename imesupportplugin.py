@@ -153,6 +153,7 @@ class WindowLayout(object):
             if view is None:
                 return None
 
+        # TODO not work with non-buffer view.
         self.char_width = self.get_char_width(view)
         self.tabs = self.tabs_status(window, view)
         self.minimap = self.minimap_status(window, view)
@@ -410,11 +411,18 @@ class WindowLayout(object):
         return c * char_width
 
 
-class ImeInlineEventListener(sublime_plugin.EventListener):
+class ImeSupportEventListener(sublime_plugin.EventListener):
     def __init__(self):
         self.layouts = {}
+        self.special_view = None
 
     def on_activated(self, view):
+        if (sublime.active_window() is not None and
+                view.file_name() is None and
+                view.id() != sublime.active_window().active_view().id()):
+            self.special_view = view
+        else:
+            self.special_view = None
         self.update(view)
 
     def on_selection_modified(self, view):
@@ -434,8 +442,12 @@ class ImeInlineEventListener(sublime_plugin.EventListener):
             self.layouts[id] = WindowLayout(window)
 
         global last_pos
-        self.layouts[id].update_status(view)
-        last_pos = self.layouts[id].calc_cursor_position(view, view.sel()[0].a)
+
+        if self.special_view is None:
+            self.layouts[id].update_status(view)
+            last_pos = self.layouts[id].calc_cursor_position(view, view.sel()[0].a)
+        else:
+            last_pos = (0, 0, '', 0)
 
 
 class ImeSupportGetMeasureCommand(sublime_plugin.WindowCommand):

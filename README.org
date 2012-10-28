@@ -1,5 +1,4 @@
-IMESupprt for Sublime Text 2
-==========================
+* IMESupprt for Sublime Text 2
 
 * 概要
   IMESupprtは、Windows の Sublime Text 2 で IME を利用した文字入力をサポートするパッケージです。

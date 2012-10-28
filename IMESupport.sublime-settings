@@ -4,5 +4,6 @@
     "imesupport_view_left_icon_width": 32,
     "imesupport_view_left_distraction_free_width": 16,
     "imesupport_view_right_vscroll_width": 16,
-    "imesupport_view_bottom_hscroll_height": 16
+    "imesupport_view_bottom_hscroll_height": 16,
+    "imesupport_debug": false
 }

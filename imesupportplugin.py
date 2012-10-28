@@ -132,7 +132,8 @@ class WindowLayout(object):
         font_face = view.settings().get('font_face', '')
         font_size = int(view.settings().get('font_size', 11))
 
-        sublime.status_message('IMESupport: ' + str(p) + repr(offset))
+        if self.get_setting('imesupport_debug'):
+            sublime.status_message('IMESupport: ' + str(p) + repr(offset))
         return (int(p[0]), int(p[1]), font_face, font_size)
 
     def update_status(self, view=None):
@@ -216,8 +217,6 @@ class WindowLayout(object):
 
         diff = sum(all_views_width2) - sum(all_views_width1)
         width = abs(diff)
-        # print('side_bar_status: ' + str(all_views_width1))
-        # print('side_bar_status: ' + str(all_views_width2))
         return {'visible': diff > 0, 'width': width}
 
     def calc_group_offset_width(self, g2d, group_col):
@@ -230,7 +229,8 @@ class WindowLayout(object):
                     ret += self.calc_view_width(g2d[y][x])
                     break
             else:
-                print('WindowLayout.calc_group_offset_width: there is empty view.')
+                if self.get_setting('imesupport_debug'):
+                    print('WindowLayout.calc_group_offset_width: there is empty view.')
         return ret
 
     def calc_group_offset_height(self, g2d, group_row):
@@ -242,7 +242,8 @@ class WindowLayout(object):
                     ret += self.calc_view_height(g2d[y][x])
                     break
             else:
-                print('WindowLayout.calc_group_offset_height: there is empty view.')
+                if self.get_setting('imesupport_debug'):
+                    print('WindowLayout.calc_group_offset_height: there is empty view.')
         return ret
 
     def calc_view_width_offset(self, view):
@@ -448,12 +449,13 @@ class ImeSupportGetMeasureCommand(sublime_plugin.WindowCommand):
             print(k + ': ' + str(v))
 
 
-class _WindowLayoutTestEventListener(sublime_plugin.EventListener):
-    def __init__(self):
-        window = sublime.active_window()
-        if window is None:
-            return
-        view = window.active_view()
-        if view is None:
-            return
-        ImeSupportGetMeasureCommand.test(window, view)
+if sublime.load_settings('IMESupport.sublime-settings').get('imesupport_debug'):
+    class _WindowLayoutTestEventListener(sublime_plugin.EventListener):
+        def __init__(self):
+            window = sublime.active_window()
+            if window is None:
+                return
+            view = window.active_view()
+            if view is None:
+                return
+            ImeSupportGetMeasureCommand.test(window, view)

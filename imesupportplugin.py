@@ -10,9 +10,32 @@ from ctypes import Structure, c_ulong
 from ctypes.wintypes import RECT, POINT
 from ctypes.wintypes import BYTE, LONG
 
-WM_IME_STARTCOMPOSITION = 0x10d
-WM_IME_ENDCOMPOSITION = 0x10e
-WM_IME_COMPOSITION = 0x10f
+WM_IME_STARTCOMPOSITION = 269
+WM_IME_ENDCOMPOSITION = 270
+WM_IME_COMPOSITION = 271
+
+GWL_STYLE = (-16)
+
+WS_OVERLAPPED = 0
+WS_POPUP = -2147483648
+WS_CHILD = 1073741824
+WS_MINIMIZE = 536870912
+WS_VISIBLE = 268435456
+WS_DISABLED = 134217728
+WS_CLIPSIBLINGS = 67108864
+WS_CLIPCHILDREN = 33554432
+WS_MAXIMIZE = 16777216
+WS_CAPTION = 12582912
+WS_BORDER = 8388608
+WS_DLGFRAME = 4194304
+WS_VSCROLL = 2097152
+WS_HSCROLL = 1048576
+WS_SYSMENU = 524288
+WS_THICKFRAME = 262144
+WS_GROUP = 131072
+WS_TABSTOP = 65536
+WS_MINIMIZEBOX = 131072
+WS_MAXIMIZEBOX = 65536
 
 
 def add(a, b):
@@ -67,6 +90,43 @@ class LOGFONT(Structure):
         ('lfPitchAndFamily', BYTE),
         ('lfFaceName',       c_tchar * LF_FACESIZE)
     ]
+
+
+window_style_bits = {
+    'WS_POPUP':        WS_POPUP,
+    'WS_CHILD':        WS_CHILD,
+    'WS_MINIMIZE':     WS_MINIMIZE,
+    'WS_VISIBLE':      WS_VISIBLE,
+    'WS_DISABLED':     WS_DISABLED,
+    'WS_CLIPSIBLINGS': WS_CLIPSIBLINGS,
+    'WS_CLIPCHILDREN': WS_CLIPCHILDREN,
+    'WS_MAXIMIZE':     WS_MAXIMIZE,
+    'WS_CAPTION':      WS_CAPTION,
+    'WS_BORDER':       WS_BORDER,
+    'WS_DLGFRAME':     WS_DLGFRAME,
+    'WS_VSCROLL':      WS_VSCROLL,
+    'WS_HSCROLL':      WS_HSCROLL,
+    'WS_SYSMENU':      WS_SYSMENU,
+    'WS_THICKFRAME':   WS_THICKFRAME,
+    'WS_GROUP':        WS_GROUP,
+    'WS_TABSTOP':      WS_TABSTOP,
+    'WS_MINIMIZEBOX':  WS_MINIMIZEBOX,
+    'WS_MAXIMIZEBOX':  WS_MAXIMIZEBOX,
+    }
+
+
+def get_window_style(hwnd):
+    style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_STYLE)
+    ret = []
+    for name, bit in window_style_bits.items():
+        if (style & bit) != 0:
+            ret.append(name)
+    return ret
+
+
+def is_fullscreen(hwnd):
+    style = get_window_style(hwnd)
+    return 'WS_BORDER' not in style
 
 
 def set_inline_position(hwnd, x, y, font_face, font_size):
@@ -160,7 +220,7 @@ class WindowLayout(object):
             self.char_width = char_width
 
         self.tabs = self.tabs_status(window, view)
-        self.distraction_free = self.distraction_free_status(view)
+        self.distraction_free = self.distraction_free_status(window)
         self.split_group = self.split_group_status(window)
 
         # Requires distraction_free
@@ -353,14 +413,12 @@ class WindowLayout(object):
         return {'visible': diff > 0}
 
     @staticmethod
-    def distraction_free_status(view):
-        """ Detecte Distraction Free Mode using line_numbers. """
-        diff = WindowLayout.line_numbers_diff(view)
-        return {'status': diff == 0}
+    def distraction_free_status(window):
+        """ Detecte Distraction Free Mode. """
+        return {'status': is_fullscreen(window.hwnd())}
 
     @staticmethod
     def line_numbers_diff(view):
-        """ Detecte Distraction Free Mode using line_numbers. """
         # FIXME Cannot get with non-active group.
         visible = view.settings().get('line_numbers')
         extent1 = view.viewport_extent()

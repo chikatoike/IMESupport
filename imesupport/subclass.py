@@ -4,7 +4,7 @@ from ctypes.wintypes import HWND, UINT, WPARAM, LPARAM
 
 
 prototype = ctypes.WINFUNCTYPE(ctypes.c_long, HWND, UINT, WPARAM, LPARAM)
-GWL_WNDPROC = -4
+GWL_WNDPROC = (-4)
 
 subclass_map = {}  # {HWND: {'orig': ORIGINAL_WINPROC, 'callback': CALLBACK}}
 

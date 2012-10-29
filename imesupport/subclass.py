@@ -47,6 +47,11 @@ def term(hwnd):
 
 
 def test():
+    # Required pywin32
+    import win32gui
+    import win32con
+    import time
+
     def on_create(hwnd):
         def test_callback(hwnd, msg, wParam, lParam):
             if msg == win32con.WM_KEYDOWN:
@@ -62,9 +67,6 @@ def test():
         print('after setup', subclass_map)
 
     # Original: http://kb.worldviz.com/articles/791
-    import win32gui, win32con
-    import time
-
     def OnKeyDown(hwnd, msg, wp, lp):
         print('Original OnKeyDown')
 
@@ -83,19 +85,19 @@ def test():
             win32con.WM_DESTROY: OnDestroy
             }
 
-    def CreateWindow(title,message_map,(l,t,r,b)):
+    def CreateWindow(title, message_map, (l, t, r, b)):
         """Create a window with defined title, message map, and rectangle"""
         wc = win32gui.WNDCLASS()
         wc.lpszClassName = 'test_win32gui_1'
-        wc.style =  win32con.CS_GLOBALCLASS|win32con.CS_VREDRAW | win32con.CS_HREDRAW
-        wc.hbrBackground = win32con.COLOR_WINDOW+1
-        wc.hCursor = win32gui.LoadCursor( 0, win32con.IDC_ARROW )
+        wc.style = win32con.CS_GLOBALCLASS | win32con.CS_VREDRAW | win32con.CS_HREDRAW
+        wc.hbrBackground = win32con.COLOR_WINDOW + 1
+        wc.hCursor = win32gui.LoadCursor(0, win32con.IDC_ARROW)
         wc.lpfnWndProc = message_map
-        class_atom = win32gui.RegisterClass(wc)
+        win32gui.RegisterClass(wc)
         hwnd = win32gui.CreateWindow(wc.lpszClassName,
             title,
-            win32con.WS_CAPTION|win32con.WS_VISIBLE|win32con.WS_SYSMENU,
-            l,t,r,b, 0, 0, 0, None)
+            win32con.WS_CAPTION | win32con.WS_VISIBLE | win32con.WS_SYSMENU,
+            l, t, r, b, 0, 0, 0, None)
 
         on_create(hwnd)
 
@@ -104,7 +106,7 @@ def test():
         win32gui.UnregisterClass(wc.lpszClassName, None)
 
     #Display sample window
-    CreateWindow('Pywin32 sample',wndproc,(100,100,500,200))
+    CreateWindow('Pywin32 sample', wndproc, (100, 100, 500, 200))
 
 
 if __name__ == '__main__':

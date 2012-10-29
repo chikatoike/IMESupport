@@ -113,6 +113,7 @@ class WindowLayout(object):
     def __init__(self, window):
         self.window = window
         self.last_extents = None
+        self.char_width = 8  # Default char width
         self.load_settings()
 
     def calc_cursor_position(self, view, cursor):
@@ -154,7 +155,10 @@ class WindowLayout(object):
                 return None
 
         # TODO not work with non-buffer view.
-        self.char_width = self.get_char_width(view)
+        char_width = self.get_char_width(view)
+        if char_width is not None:
+            self.char_width = char_width
+
         self.tabs = self.tabs_status(window, view)
         self.minimap = self.minimap_status(window, view)
         self.distraction_free = self.distraction_free_status(view)
@@ -391,7 +395,7 @@ class WindowLayout(object):
         # FIXME How to handle double width char? Sometimes it cannot import unicodedata.
         r = view.find(r'^[\x20-\x7E]+$', 0)
         if r is None:
-            return 8  # Default char width
+            return None
         text = view.substr(r)
         p1 = view.text_to_layout(r.begin())
         p2 = view.text_to_layout(r.end())

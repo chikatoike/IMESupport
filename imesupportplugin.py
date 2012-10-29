@@ -160,8 +160,8 @@ class WindowLayout(object):
             self.char_width = char_width
 
         self.tabs = self.tabs_status(window, view)
-        self.minimap = self.minimap_status(window, view)
         self.distraction_free = self.distraction_free_status(view)
+        self.split_group = self.split_group_status(window)
 
         # Requires distraction_free
         line_numbers = self.line_numbers_status(view, self.char_width)
@@ -173,8 +173,8 @@ class WindowLayout(object):
         return {
             'char_width': self.char_width,
             'tabs': self.tabs,
-            'minimap': self.minimap,
             'distraction_free': self.distraction_free,
+            'split_group': self.split_group,
             'line_numbers': line_numbers,
             'hscroll_bar': hscroll_bar,
             'side_bar': self.side_bar,
@@ -187,7 +187,6 @@ class WindowLayout(object):
         return self.settings.get(key, default)
 
     def calc_offset(self, window, view):
-        window = self.window
         group, _ = window.get_view_index(view)
         layout = window.get_layout()
         _, c = self.get_layout_rowcol(layout)
@@ -202,36 +201,46 @@ class WindowLayout(object):
         offset[1] += self.calc_view_height_offset(view)
         return offset
 
-    def side_bar_status(self, window, view):
-        window = self.window
+    def split_group_status(self, window):
         layout = window.get_layout()
-        r, c = self.get_layout_rowcol(layout)
+        _, c = self.get_layout_rowcol(layout)
+        views = self.get_group_list(window)
+
+        non_view = {'visible': False, 'width': 0}
+        minimaps = [
+            self.minimap_status(window, view) if view is not None else non_view
+            for view in views]
+        groups = [{'minimap': minimap} for minimap in minimaps]
+        return self.make_list2d(groups, c)
+
+    def side_bar_status(self, window, view):
+        layout = window.get_layout()
+        _, c = self.get_layout_rowcol(layout)
 
         g2d = self.make_list2d(self.get_group_list(window), c)
         all_views_width1 = self.calc_group_offset_width(g2d, c)
 
         window.run_command('toggle_side_bar')
-        temp = self.minimap  # backup current
-        self.minimap = self.minimap_status(window, view)
+        temp = self.split_group  # backup current
+        self.split_group = self.split_group_status(window)
 
         g2d = self.make_list2d(self.get_group_list(window), c)
         all_views_width2 = self.calc_group_offset_width(g2d, c)
 
         window.run_command('toggle_side_bar')
-        self.minimap = temp  # restore
+        self.split_group = temp  # restore
 
         diff = sum(all_views_width2) - sum(all_views_width1)
         width = abs(diff)
         return {'visible': diff > 0, 'width': width}
 
     def calc_group_offset_width(self, g2d, group_col):
-        # FIXME not work with asymmetric splited groups.
         r = len(g2d)
         ret = []
         for x in range(group_col):
             for y in range(r):
                 if g2d[y][x] is not None:
-                    ret += self.calc_view_width(g2d[y][x])
+                    ret += self.calc_view_width(g2d[y][x], y, x)
                     break
             else:
                 if self.get_setting('imesupport_debug'):
@@ -266,10 +275,11 @@ class WindowLayout(object):
             (line_numbers['width'] if line_numbers['visible'] else 0)
             ]
 
-    def calc_view_width(self, view):
+    def calc_view_width(self, view, row, col):
+        minimap = self.split_group[row][col]['minimap']
         return self.calc_view_width_offset(view) + [
             view.viewport_extent()[0],
-            (self.minimap['width'] if self.minimap['visible'] else 0),
+            (minimap['width'] if minimap['visible'] else 0),
             self.get_setting('imesupport_view_right_vscroll_width')
             ]
 

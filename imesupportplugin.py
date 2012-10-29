@@ -489,9 +489,12 @@ class ImeSupportEventListener(sublime_plugin.EventListener):
         self.special_view = None
 
     def on_activated(self, view):
-        if (sublime.active_window() is not None and
-                view.file_name() is None and
-                view.id() != sublime.active_window().active_view().id()):
+        window = sublime.active_window()
+        if (view is not None
+                and window is not None
+                and window.active_view() is not None
+                and view.file_name() is None
+                and view.id() != window.active_view().id()):
             self.special_view = view
         else:
             self.special_view = None

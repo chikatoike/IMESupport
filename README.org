@@ -5,14 +5,14 @@
   IME でインライン変換の入力文字が正しい位置に表示されない問題をある程度解決できます。
 
 * 動作環境
-  Windows OS のみ対応しています。
+  Windows OS のみ対応しています。64bit版のWindowsでは動作確認していません。もし64bit版で動かしてみて動作しない場合は報告をいただけると助かります。
   以下の環境で動作確認しました。
-  - Windows Vista + Microsoft Office IME 2007
-  - Windows Vista + Google日本語入力
-  - Windows Vista + SKK日本語入力FEP
-  - Windows 7 + Microsoft Office IME 2010
-  - Windows 7 + Google日本語入力
-  - Windows 7 + SKK日本語入力FEP
+  - Windows Vista 32bit + Microsoft Office IME 2007
+  - Windows Vista 32bit + Google日本語入力
+  - Windows Vista 32bit + SKK日本語入力FEP
+  - Windows 7 32bit + Microsoft Office IME 2010
+  - Windows 7 32bit + Google日本語入力
+  - Windows 7 32bit + SKK日本語入力FEP
 
 * インストール方法
   現在 Package Control には登録されていません。そのため手動でインストールする必要があります。
@@ -45,6 +45,9 @@
   IME のインライン変換対応は、 Sublime Text 2 のウィンドウプロシージャを IMESupport のものに置き換え(サブクラス化)、IME のウィンドウメッセージを処理することで実現しています。 本パッケージ以外に同じ方法を使うパッケージを利用している場合、干渉して正しく動作しない可能性があります。
 
 * CHANGELOG
+  2012-10-30
+  - 64bit版のWindowsのサポートについて記載
+
   2012-10-29
-  - 最初のリリース
   - 分割の比率が 1:1 ではない場合の表示位置がおかしい問題を修正
+  - 最初のリリース

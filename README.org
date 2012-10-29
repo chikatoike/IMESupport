@@ -28,11 +28,11 @@
 
   IMEをONにして日本語表示しようとすると、以下のようにカーソル位置とは別の場所に入力中のテキストが表示されます。
 
-  [[./img/inline1.png]]
+  [[https://raw.github.com/chikatoike/IMESupport/master/img/inline1.png]]
 
   これを、カーソル位置に表示されるように補正します。
 
-  [[./img/inline2.png]]
+  [[https://raw.github.com/chikatoike/IMESupport/master/img/inline2.png]]
 
 ** 既知の不具合
    - IME ON で連続で入力するときに、変換確定後の次の1文字が、前の入力開始位置と同じ場所に表示されてしまいます。 これは2文字以上入力すれば、正しい位置に移動します。

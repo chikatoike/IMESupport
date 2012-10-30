@@ -5,7 +5,10 @@
   IME でインライン変換の入力文字が正しい位置に表示されない問題をある程度解決できます。
 
 * 動作環境
-  Windows OS のみ対応しています。64bit版のWindowsでは動作確認していません。もし64bit版で動かしてみて動作しない場合は報告をいただけると助かります。
+  Windows OS のみ対応しています。
+
+  *今のところ64bit版のWindowsでは動作しません。* 現在対応中です。64bit版で動作させた時に、Sublime Text 2 のコンソールに関係するエラーメッセージが出力された場合、報告していただけると助かります。コンソールは、Windows版のSublime Text 2 では ctrl+@ で表示できます。
+
   以下の環境で動作確認しました。
   - Windows Vista 32bit + Microsoft Office IME 2007
   - Windows Vista 32bit + Google日本語入力
@@ -26,7 +29,7 @@
 * インライン変換の表示位置補正について
   この機能はインストールするだけで有効になります。ユーザー側での設定は必要ありません。
 
-  IMEをONにして日本語表示しようとすると、以下のようにカーソル位置とは別の場所に入力中のテキストが表示されます。
+  現行バージョンの Sublime Text 2 では、IMEをONにして日本語入力しようとすると、以下のようにカーソル位置とは別の場所に入力中のテキストが表示されます。
 
   [[https://raw.github.com/chikatoike/IMESupport/master/img/inline1.png]]
 

@@ -173,7 +173,6 @@ class WindowLayout(object):
     def __init__(self, window):
         self.window = window
         self.last_extents = None
-        self.char_width = 8  # Default char width
         self.load_settings()
 
     def calc_cursor_position(self, view, cursor):
@@ -214,24 +213,19 @@ class WindowLayout(object):
             if view is None:
                 return None
 
-        # TODO not work with non-buffer view.
-        char_width = self.get_char_width(view)
-        if char_width is not None:
-            self.char_width = char_width
-
         self.tabs = self.tabs_status(window, view)
         self.distraction_free = self.distraction_free_status(window)
         self.split_group = self.split_group_status(window)
 
         # Requires distraction_free
-        line_numbers = self.line_numbers_status(view, self.char_width)
+        line_numbers = self.line_numbers_status(view)
         hscroll_bar = self.hscroll_bar_status(view)
 
-        # Requires minimap and char_width
+        # Requires minimap
         self.side_bar = self.side_bar_status(window, view)
 
         return {
-            'char_width': self.char_width,
+            'em_width': view.em_width(),
             'tabs': self.tabs,
             'distraction_free': self.distraction_free,
             'split_group': self.split_group,
@@ -329,7 +323,7 @@ class WindowLayout(object):
             left_width += 4
         else:
             left_width = self.get_setting('imesupport_view_left_icon_width')
-        line_numbers = self.line_numbers_status(view, self.char_width)
+        line_numbers = self.line_numbers_status(view)
         return [
             left_width,
             (line_numbers['width'] if line_numbers['visible'] else 0)
@@ -353,14 +347,14 @@ class WindowLayout(object):
             (hscroll_bar['height'] if hscroll_bar['visible'] else 0)
             ]
 
-    def line_numbers_status(self, view, char_width):
+    def line_numbers_status(self, view):
         # NOTE line numbers is always hidden on Distraction Free Mode.
         if self.distraction_free['status']:
             # print(imesupportplugin.WindowLayout.line_numbers_status(window.active_view_in_group(0)))
             return {'visible': False, 'width': 0, 'mode': 'distraction_free'}
         else:
             visible = view.settings().get('line_numbers')
-            width = (WindowLayout.calc_line_numbers_width(view, char_width) + 3
+            width = (WindowLayout.calc_line_numbers_width(view) + 3
                 if visible else 0)
             return {'visible': visible, 'width': width, 'mode': 'calc'}
 
@@ -458,29 +452,14 @@ class WindowLayout(object):
         return [lst[i * cols:(i + 1) * cols] for i in range(len(lst) / cols)]
 
     @staticmethod
-    def get_char_width(view):
-        # Find half width char.
-        # FIXME How to handle double width char? Sometimes it cannot import unicodedata.
-        r = view.find(r'^[\x20-\x7E]+$', 0)
-        if r is None:
-            return None
-        text = view.substr(r)
-        p1 = view.text_to_layout(r.begin())
-        p2 = view.text_to_layout(r.end())
-        assert p1[1] == p2[1]
-        width = p2[0] - p1[0]
-        count = len(text)
-        return width / count
-
-    @staticmethod
     def get_number_column(n):
         return int(math.log10(n)) + 1
 
     @staticmethod
-    def calc_line_numbers_width(view, char_width):
+    def calc_line_numbers_width(view):
         lines, _ = view.rowcol(view.size())
         c = WindowLayout.get_number_column(lines + 1)
-        return c * char_width
+        return c * view.em_width()
 
 
 class ImeSupportEventListener(sublime_plugin.EventListener):

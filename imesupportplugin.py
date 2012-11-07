@@ -129,7 +129,7 @@ def is_fullscreen(hwnd):
     return 'WS_BORDER' not in style
 
 
-def set_inline_position(hwnd, x, y, font_face, font_size):
+def set_inline_position(hwnd, x, y, font_face, font_height):
     # borrowed from http://d.hatena.ne.jp/doloopwhile/20090627/1275176169
     hIMC = windll.imm32.ImmGetContext(hwnd)
     status = windll.imm32.ImmGetOpenStatus(hIMC)
@@ -143,11 +143,10 @@ def set_inline_position(hwnd, x, y, font_face, font_size):
     cf.ptCurrentPos = pt
     windll.imm32.ImmSetCompositionWindow(hIMC, byref(cf))
 
-    # AttributeError: function 'ImmSetCompositionFont' not found
-    # lf = LOGFONT()
-    # lf.lfHeight = font_size
-    # lf.lfFaceName = font_face
-    # windll.imm32.ImmSetCompositionFont(hIMC, byref(lf))
+    lf = LOGFONT()
+    lf.lfHeight = font_height
+    lf.lfFaceName = font_face
+    windll.imm32.ImmSetCompositionFontW(hIMC, byref(lf))
 
     windll.imm32.ImmReleaseContext(hwnd, hIMC)
 
@@ -190,11 +189,11 @@ class WindowLayout(object):
         p = add(p, (sum(offset[0]), sum(offset[1])))
 
         font_face = view.settings().get('font_face', '')
-        font_size = int(view.settings().get('font_size', 11))
+        font_height = int(view.line_height())
 
         if self.get_setting('imesupport_debug'):
             sublime.status_message('IMESupport: ' + str(p) + repr(offset))
-        return (int(p[0]), int(p[1]), font_face, font_size)
+        return (int(p[0]), int(p[1]), font_face, font_height)
 
     def update_status(self, view=None):
         extents = self.get_extent_list(self.window)

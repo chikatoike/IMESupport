@@ -1,7 +1,7 @@
-* IMESupprt for Sublime Text 2
+* IMESupport for Sublime Text 2
 
 * 概要
-  IMESupprtは、Windows の Sublime Text 2 で IME を利用した文字入力をサポートするパッケージです。
+  IMESupportは、Windows の Sublime Text 2 で IME を利用した文字入力をサポートするパッケージです。
   IME でインライン変換の入力文字が正しい位置に表示されない問題をある程度解決できます。
 
 * 動作環境

@@ -38,11 +38,7 @@ def setup(hwnd, callback):
 
 def term(hwnd):
     if hwnd in subclass_map:
-        proc = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_WNDPROC)
-        if proc == proc_obj:
-            ctypes.windll.user32.SetWindowLongW(hwnd, GWL_WNDPROC, subclass_map[hwnd]['orig'])
-        else:
-            assert False  # Unexpected
+        ctypes.windll.user32.SetWindowLongW(hwnd, GWL_WNDPROC, subclass_map[hwnd]['orig'])
         del subclass_map[hwnd]
 
 
@@ -55,7 +51,11 @@ def test():
     def on_create(hwnd):
         def test_callback(hwnd, msg, wParam, lParam):
             if msg == win32con.WM_KEYDOWN:
-                print('Subclased OnKeyDown')
+                if wParam == win32con.VK_ESCAPE:
+                    print('Cancel subclasss')
+                    term(hwnd)
+                else:
+                    print('Subclased OnKeyDown')
                 return 0
             return None
 

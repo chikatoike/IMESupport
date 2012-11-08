@@ -17,8 +17,11 @@ def proc_func(hwnd, msg, wParam, lParam):
                 return ret
     except:
         pass
-    return ctypes.windll.user32.CallWindowProcW(
-        subclass_map[hwnd]['orig'], hwnd, msg, wParam, lParam)
+    if hwnd in subclass_map:
+        return ctypes.windll.user32.CallWindowProcW(
+            subclass_map[hwnd]['orig'], hwnd, msg, wParam, lParam)
+    else:
+        return 0  # Original winproc not found.
 
 
 proc_obj = prototype(proc_func)

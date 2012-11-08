@@ -10,6 +10,7 @@ from ctypes import Structure, c_ulong
 from ctypes.wintypes import RECT, POINT
 from ctypes.wintypes import BYTE, LONG
 
+WM_COMMAND = 273
 WM_IME_STARTCOMPOSITION = 269
 WM_IME_ENDCOMPOSITION = 270
 WM_IME_COMPOSITION = 271
@@ -165,6 +166,10 @@ def callback(hwnd, msg, wParam, lParam):
         except Exception, e:
             print('last_pos: ' + str(last_pos))
             print('Exception: ' + str(e))
+    elif msg == WM_COMMAND:
+        subclass.term(hwnd)
+        ctypes.windll.user32.PostMessage(hwnd, msg, wParam, lParam)
+        return 0
     return None
 
 

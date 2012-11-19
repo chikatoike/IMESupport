@@ -2,7 +2,7 @@
 import sublime
 import sublime_plugin
 import math
-from imesupport import subclass
+from imesupport import messagehook
 
 import ctypes
 from ctypes import windll, byref
@@ -151,6 +151,7 @@ def set_inline_position(hwnd, x, y, font_face, font_height):
     windll.imm32.ImmReleaseContext(hwnd, hIMC)
 
 
+last_hwnd = 0
 last_pos = ()
 last_set_pos = ()
 
@@ -159,7 +160,7 @@ def callback(hwnd, msg, wParam, lParam):
     if msg == WM_IME_STARTCOMPOSITION or msg == WM_IME_COMPOSITION:
         try:
             global last_set_pos
-            if len(last_pos) > 0 and last_pos != last_set_pos:
+            if len(last_pos) > 0 and last_pos != last_set_pos and hwnd == last_hwnd:
                 set_inline_position(hwnd, *last_pos)
                 last_set_pos = last_pos
         except Exception, e:
@@ -488,19 +489,20 @@ class ImeSupportEventListener(sublime_plugin.EventListener):
         if window is None:
             return
 
-        subclass.setup(view.window().hwnd(), callback)
-
         id = window.id()
         if id not in self.layouts:
             self.layouts[id] = WindowLayout(window)
 
+        global last_hwnd
         global last_pos
+
+        last_hwnd = window.hwnd()
 
         if self.special_view is None:
             self.layouts[id].update_status(view)
             last_pos = self.layouts[id].calc_cursor_position(view, view.sel()[0].a)
         else:
-            last_pos = (0, 0, '', 0)
+            last_pos = ()
 
 
 class ImeSupportGetMeasureCommand(sublime_plugin.WindowCommand):
@@ -524,3 +526,6 @@ if sublime.load_settings('IMESupport.sublime-settings').get('imesupport_debug'):
             if view is None:
                 return
             ImeSupportGetMeasureCommand.test(window, view)
+
+
+messagehook.setup(callback)

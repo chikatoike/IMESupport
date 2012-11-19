@@ -1,49 +1,45 @@
 # -*- coding: utf-8 -*-
 import ctypes
-from ctypes.wintypes import HWND, UINT, WPARAM, LPARAM
+from ctypes.wintypes import WPARAM, LPARAM, MSG
 
 
-prototype = ctypes.WINFUNCTYPE(ctypes.c_long, HWND, UINT, WPARAM, LPARAM)
-GWL_WNDPROC = (-4)
+WH_GETMESSAGE = 3
 
-subclass_map = {}  # {HWND: {'orig': ORIGINAL_WINPROC, 'callback': CALLBACK}}
-
-
-def proc_func(hwnd, msg, wParam, lParam):
-    try:
-        if hwnd in subclass_map:
-            ret = subclass_map[hwnd]['callback'](hwnd, msg, wParam, lParam)
-            if ret is not None:
-                return ret
-    except:
-        pass
-    return ctypes.windll.user32.CallWindowProcW(
-        subclass_map[hwnd]['orig'], hwnd, msg, wParam, lParam)
+hook_handle = None
+hook_callback = None
 
 
-proc_obj = prototype(proc_func)
+def message_hook_func(code, wParam, lParam):
+    if hook_callback is not None:
+        msg = ctypes.cast(lParam, ctypes.POINTER(MSG))
+        hook_callback(msg[0].hWnd, msg[0].message, msg[0].wParam, msg[0].lParam)
+    return ctypes.windll.user32.CallNextHookEx(hook_handle, code, wParam, lParam)
 
 
-def setup(hwnd, callback):
-    if hwnd not in subclass_map:
-        proc = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_WNDPROC)
-        if proc != proc_obj:
-            ctypes.windll.user32.SetWindowLongW(hwnd, GWL_WNDPROC, proc_obj)
-            subclass_map[hwnd] = {'orig': proc, 'callback': callback}
-        else:
-            assert False  # Unexpected
-    else:
-        subclass_map[hwnd]['callback'] = callback
+prototype = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_long, WPARAM, LPARAM)
+proc_obj = prototype(message_hook_func)
 
 
-def term(hwnd):
-    if hwnd in subclass_map:
-        proc = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_WNDPROC)
-        if proc == proc_obj:
-            ctypes.windll.user32.SetWindowLongW(hwnd, GWL_WNDPROC, subclass_map[hwnd]['orig'])
-        else:
-            assert False  # Unexpected
-        del subclass_map[hwnd]
+def setup(callback):
+    global hook_handle
+    global hook_callback
+    hook_callback = callback
+
+    if hook_handle is not None:
+        term()
+
+    hook_handle = ctypes.windll.user32.SetWindowsHookExW(
+        WH_GETMESSAGE, proc_obj, 0,
+        ctypes.windll.Kernel32.GetCurrentThreadId())
+
+
+def term():
+    global hook_handle
+    global hook_callback
+    hook_callback = None
+    if hook_handle is not None:
+        ctypes.windll.user32.UnhookWindowsHookEx(hook_handle)
+        hook_handle = None
 
 
 def test():
@@ -59,12 +55,7 @@ def test():
                 return 0
             return None
 
-        setup(hwnd, test_callback)
-        print('after setup', subclass_map)
-        setup(hwnd, test_callback)
-        print('after setup', subclass_map)
-        setup(hwnd, test_callback)
-        print('after setup', subclass_map)
+        setup(test_callback)
 
     # Original: http://kb.worldviz.com/articles/791
     def OnKeyDown(hwnd, msg, wp, lp):

@@ -1,4 +1,5 @@
 * IMESupport for Sublime Text 2
+  [[https://github.com/chikatoike/IMESupport/blob/master/README_en.org][English]]
 
 * 概要
   IMESupportは、Windows の Sublime Text 2 で IME を利用した文字入力をサポートするパッケージです。

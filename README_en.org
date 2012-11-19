@@ -1,0 +1,22 @@
+* IMESupport for Sublime Text 2
+
+* Description
+  In current version of Sublime Text2, there is a problem that can not be displayed IME composition window correctly.
+  This plugin solves this problem.
+
+* Target platform
+  This plugin works only on windows.
+
+* Screenshot
+
+  Before installed this plugin.
+  Inptting using IME, but IME composition window is not displayed correct position.
+
+  [[https://raw.github.com/chikatoike/IMESupport/master/img/inline1.png]]
+
+  After installed this plugin, IME comosition window is displayed correctly.
+
+  [[https://raw.github.com/chikatoike/IMESupport/master/img/inline2.png]]
+
+* Reference
+  http://sublimetext.userecho.com/topic/98697-handling-ime-message-on-windows-for-koreanjapanese-and-chinese-user/

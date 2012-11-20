@@ -129,6 +129,28 @@ def is_fullscreen(hwnd):
     return 'WS_BORDER' not in style
 
 
+def is_ime_opened(hwnd, status):
+    hIMC = ctypes.windll.imm32.ImmGetContext(hwnd)
+    try:
+        return bool(ctypes.windll.imm32.ImmGetOpenStatus(hIMC))
+    finally:
+        ctypes.windll.imm32.ImmReleaseContext(hwnd, hIMC)
+
+
+def set_ime_status(hwnd, status):
+    hIMC = ctypes.windll.imm32.ImmGetContext(hwnd)
+    try:
+        if status == True:  # IME on
+            ctypes.windll.imm32.ImmSetOpenStatus(hIMC, 0)
+        elif status == False:  # IME off
+            ctypes.windll.imm32.ImmSetOpenStatus(hIMC, 1)
+        elif status == 'toggle':  # IME toggle
+            status = ctypes.windll.imm32.ImmGetOpenStatus(hIMC)
+            ctypes.windll.imm32.ImmSetOpenStatus(hIMC, 0 if status else 1)
+    finally:
+        ctypes.windll.imm32.ImmReleaseContext(hwnd, hIMC)
+
+
 def set_inline_position(hwnd, x, y, font_face, font_height):
     # borrowed from http://d.hatena.ne.jp/doloopwhile/20090627/1275176169
     hIMC = windll.imm32.ImmGetContext(hwnd)
@@ -526,6 +548,11 @@ if sublime.load_settings('IMESupport.sublime-settings').get('imesupport_debug'):
             if view is None:
                 return
             ImeSupportGetMeasureCommand.test(window, view)
+
+
+class ImeSupportSetImeStatusCommand(sublime_plugin.TextCommand):
+    def run(self, edit, status):
+        set_ime_status(self.view.window().hwnd(), status)
 
 
 messagehook.setup(callback)

@@ -23,7 +23,6 @@ proc_obj = prototype(message_hook_func)
 def setup(callback):
     global hook_handle
     global hook_callback
-    hook_callback = callback
 
     if hook_handle is not None:
         term()
@@ -31,6 +30,11 @@ def setup(callback):
     hook_handle = ctypes.windll.user32.SetWindowsHookExW(
         WH_GETMESSAGE, proc_obj, 0,
         ctypes.windll.Kernel32.GetCurrentThreadId())
+    if hook_handle == 0:
+        hook_handle = None
+        raise Exception('IMESupport: SetWindowsHookExW failed.')
+
+    hook_callback = callback
 
 
 def term():

@@ -213,6 +213,8 @@ class WindowLayout(object):
 
         font_face = view.settings().get('font_face', '')
         font_height = int(view.line_height())
+        font_height -= (view.settings().get("line_padding_top", 0)
+            + view.settings().get("line_padding_bottom", 0))
 
         if self.get_setting('imesupport_debug'):
             sublime.status_message('IMESupport: ' + str(p) + repr(offset))

@@ -489,18 +489,8 @@ class WindowLayout(object):
 class ImeSupportEventListener(sublime_plugin.EventListener):
     def __init__(self):
         self.layouts = {}
-        self.special_view = None
 
     def on_activated(self, view):
-        window = sublime.active_window()
-        if (view is not None
-                and window is not None
-                and window.active_view() is not None
-                and view.file_name() is None
-                and view.id() != window.active_view().id()):
-            self.special_view = view
-        else:
-            self.special_view = None
         self.update(view)
 
     def on_selection_modified(self, view):
@@ -522,11 +512,11 @@ class ImeSupportEventListener(sublime_plugin.EventListener):
 
         last_hwnd = window.hwnd()
 
-        if self.special_view is None:
+        if view.settings().get('is_widget'):
+            last_pos = ()
+        else:
             self.layouts[id].update_status(view)
             last_pos = self.layouts[id].calc_cursor_position(view, view.sel()[0].a)
-        else:
-            last_pos = ()
 
 
 class ImeSupportGetMeasureCommand(sublime_plugin.WindowCommand):

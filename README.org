@@ -20,7 +20,14 @@
   ATOK等、上に書かれていないIMEでも動作するはずですが、確認していません。
 
 * インストール方法
-  現在 Package Control には登録されていません。そのため手動でインストールする必要があります。
+  Package Controlを使ってインストールしてください。
+  Package Controlをインストールした状態で、以下の手順でインストールできます。
+
+  1. コマンドパレットで「Package Control: Install Package」を絞り込んでEnter
+  2. パッケージ一覧から「IMESupport」を絞り込んでEnter
+  3. ステータスバーにインストール完了のメッセージが表示されたら Sublime Text 2 を再起動
+
+  手動でインストールする場合:@<br>
   コマンドプロンプト等で C:\Users\(ユーザー名)\AppData\Roaming\Sublime Text 2\Packages に移動して、
   git clone してください。
 
@@ -52,6 +59,9 @@
   [[http://sublimetext.userecho.com/topic/98697-handling-ime-message-on-windows-for-koreanjapanese-and-chinese-user/]]
 
 * CHANGELOG
+  2013-01-22
+  - Package Controlを使ったインストール方法を追加
+
   2012-11-19
   - x64版に対応
   - メニューからのプロジェクト選択でクラッシュする問題を修正

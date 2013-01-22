@@ -211,14 +211,25 @@ class WindowLayout(object):
         offset[1].append(self.get_setting('imesupport_offset_y'))
         p = add(p, (sum(offset[0]), sum(offset[1])))
 
+        if self.get_setting('imesupport_debug'):
+            sublime.status_message('IMESupport: ' + str(p) + repr(offset))
+
+        font_face, font_height = self.get_font_info(view)
+        return (int(p[0]), int(p[1]), font_face, font_height)
+
+    def get_widget_cursor_position(self, view, cursor):
+        font_face, font_height = self.get_font_info(view)
+        # FIXME Is there a way to get cursor position of widget view?
+        return (0, 0, font_face, font_height)
+
+    @staticmethod
+    def get_font_info(view):
         font_face = view.settings().get('font_face', '')
         font_height = int(view.line_height())
         font_height -= (view.settings().get("line_padding_top", 0)
             + view.settings().get("line_padding_bottom", 0))
+        return (font_face, font_height)
 
-        if self.get_setting('imesupport_debug'):
-            sublime.status_message('IMESupport: ' + str(p) + repr(offset))
-        return (int(p[0]), int(p[1]), font_face, font_height)
 
     def update_status(self, view=None):
         extents = self.get_extent_list(self.window)
@@ -513,7 +524,7 @@ class ImeSupportEventListener(sublime_plugin.EventListener):
         last_hwnd = window.hwnd()
 
         if view.settings().get('is_widget'):
-            last_pos = ()
+            last_pos = self.layouts[id].get_widget_cursor_position(view, view.sel()[0].a)
         else:
             self.layouts[id].update_status(view)
             last_pos = self.layouts[id].calc_cursor_position(view, view.sel()[0].a)

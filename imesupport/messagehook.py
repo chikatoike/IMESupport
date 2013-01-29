@@ -80,8 +80,9 @@ def test():
             win32con.WM_DESTROY: OnDestroy
             }
 
-    def CreateWindow(title, message_map, (l, t, r, b)):
+    def CreateWindow(title, message_map, location):
         """Create a window with defined title, message map, and rectangle"""
+        l, t, r, b = location
         wc = win32gui.WNDCLASS()
         wc.lpszClassName = 'test_win32gui_1'
         wc.style = win32con.CS_GLOBALCLASS | win32con.CS_VREDRAW | win32con.CS_HREDRAW

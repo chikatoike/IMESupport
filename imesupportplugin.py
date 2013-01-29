@@ -2,7 +2,13 @@
 import sublime
 import sublime_plugin
 import math
-from imesupport import messagehook
+
+try:
+    # Sublime Text 2 & Python 2.6
+    from imesupport import messagehook
+except ImportError:
+    # Sublime Text 3 & Python 3.3
+    from .imesupport import messagehook
 
 import ctypes
 from ctypes import windll, byref
@@ -185,7 +191,7 @@ def callback(hwnd, msg, wParam, lParam):
             if len(last_pos) > 0 and last_pos != last_set_pos and hwnd == last_hwnd:
                 set_inline_position(hwnd, *last_pos)
                 last_set_pos = last_pos
-        except Exception, e:
+        except Exception as e:
             print('last_pos: ' + str(last_pos))
             print('Exception: ' + str(e))
     return None
@@ -229,7 +235,6 @@ class WindowLayout(object):
         font_height -= (view.settings().get("line_padding_top", 0)
             + view.settings().get("line_padding_bottom", 0))
         return (font_face, font_height)
-
 
     def update_status(self, view=None):
         extents = self.get_extent_list(self.window)

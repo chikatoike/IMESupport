@@ -489,7 +489,7 @@ class WindowLayout(object):
     @staticmethod
     def make_list2d(lst, cols):
         assert (len(lst) % cols) == 0
-        return [lst[i * cols:(i + 1) * cols] for i in range(len(lst) / cols)]
+        return [lst[i * cols:(i + 1) * cols] for i in range(len(lst) // cols)]
 
     @staticmethod
     def get_number_column(n):

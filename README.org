@@ -27,7 +27,8 @@
   2. パッケージ一覧から「IMESupport」を絞り込んでEnter
   3. ステータスバーにインストール完了のメッセージが表示されたら Sublime Text 2 を再起動
 
-  手動でインストールする場合:@<br>
+  手動でインストールする場合:
+
   コマンドプロンプト等で C:\Users\(ユーザー名)\AppData\Roaming\Sublime Text 2\Packages に移動して、
   git clone してください。
 
@@ -55,8 +56,8 @@
    - 垂直分割時に、左側に1つもタブ(View)が表示されていない場合、右側のViewでは正しい位置に表示されません。これは、Viewがないとウィンドウ左端からの距離が計算出来ないためです。同様に、水平分割時に上側にViewがない場合は下側で正しい位置に表示されません。
 
 * 参考
-  [[http://d.hatena.ne.jp/chikatoike/20121030/1351552567]]
-  [[http://sublimetext.userecho.com/topic/98697-handling-ime-message-on-windows-for-koreanjapanese-and-chinese-user/]]
+  - http://d.hatena.ne.jp/chikatoike/20121030/1351552567
+  - http://sublimetext.userecho.com/topic/98697-handling-ime-message-on-windows-for-koreanjapanese-and-chinese-user/
 
 * CHANGELOG
   2013-01-22

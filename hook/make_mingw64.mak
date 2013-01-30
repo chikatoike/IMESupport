@@ -5,7 +5,7 @@ SRC=imesupport_hook.c
 HEADER=imesupport_hook.h
 CFLAGS=-O2 -Wall -shared -m64
 LDFLAGS+=-limm32
-OPT=-D_DEBUG
+OPT=
 
 all: $(TARGET)
 

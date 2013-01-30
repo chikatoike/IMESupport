@@ -5,12 +5,12 @@ SRC=imesupport_hook.c
 HEADER=imesupport_hook.h
 CFLAGS=-O2 -Wall -shared -m32
 LDFLAGS+=-limm32
-OPT=-D_DEBUG
+OPT=
 
 all: $(TARGET)
 
 $(TARGET): $(SRC) $(HEADER)
-    gcc $(CFLAGS) $(OPT) -o $(TARGET) $(SRC) $(LDFLAGS)
+	gcc $(CFLAGS) $(OPT) -o $(TARGET) $(SRC) $(LDFLAGS)
 
 .PHONY: clean
 clean:

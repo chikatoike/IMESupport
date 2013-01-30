@@ -1,22 +1,27 @@
-* IMESupport for Sublime Text 2
+* IMESupport for Sublime Text
   English: https://github.com/chikatoike/IMESupport/blob/master/README_en.org
 
 * 概要
-  IMESupportは、Windows の Sublime Text 2 で IME を利用した文字入力をサポートするパッケージです。
+  IMESupportは、Windows の Sublime Text で IME を利用した文字入力をサポートするパッケージです。
   IME でインライン変換の入力文字が正しい位置に表示されない問題をある程度解決できます。
 
 * 動作環境
-  Windows OS のみ対応しています。
-  Sublime Text 2 の x86版/x64版 の両方で動作します。
+  Windows OS のみ対応しています。 以下のバージョンで動作します。
+  - Sublime Text 2 32bit
+  - Sublime Text 2 64bit
+  - Sublime Text 3 32bit
+  - Sublime Text 3 64bit
 
   以下の環境で動作確認しました。
-  - Windows Vista 32bit + Microsoft Office IME 2007
-  - Windows Vista 32bit + Google日本語入力
-  - Windows Vista 32bit + SKK日本語入力FEP
-  - Windows 7 32bit + Microsoft Office IME 2010
-  - Windows 7 32bit + Google日本語入力
-  - Windows 7 32bit + SKK日本語入力FEP
-  - Windows 8 64bit + Sublime Text 2 x64 + Microsoft IME 2012
+  - Sublime Text 2 32bit + Windows Vista 32bit + Microsoft Office IME 2007
+  - Sublime Text 2 32bit + Windows Vista 32bit + Google日本語入力
+  - Sublime Text 2 32bit + Windows Vista 32bit + SKK日本語入力FEP
+  - Sublime Text 2 32bit + Windows 7 32bit + Microsoft Office IME 2010
+  - Sublime Text 2 32bit + Windows 7 32bit + Google日本語入力
+  - Sublime Text 2 32bit + Windows 7 32bit + SKK日本語入力FEP
+  - Sublime Text 2 64bit + Windows 8 64bit + Microsoft IME 2012
+  - Sublime Text 3 32bit + Windows 8 64bit + Microsoft IME 2012
+  - Sublime Text 3 64bit + Windows 8 64bit + Microsoft IME 2012
   ATOK等、上に書かれていないIMEでも動作するはずですが、確認していません。
 
 * インストール方法
@@ -60,6 +65,13 @@
   - http://sublimetext.userecho.com/topic/98697-handling-ime-message-on-windows-for-koreanjapanese-and-chinese-user/
 
 * CHANGELOG
+  2013-01-30
+  - Sublime Text 3 に対応
+  - ver.0.2 開発開始
+
+  2013-01-29
+  - ver.0.1 リリース
+
   2013-01-22
   - Package Controlを使ったインストール方法を追加
 

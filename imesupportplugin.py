@@ -3,13 +3,6 @@ import sublime
 import sublime_plugin
 import math
 
-try:
-    # Sublime Text 2 & Python 2.6
-    from imesupport import messagehook
-except ImportError:
-    # Sublime Text 3 & Python 3.3
-    from .imesupport import messagehook
-
 import ctypes
 from ctypes import windll, byref
 from ctypes import Structure, c_ulong
@@ -505,6 +498,7 @@ class WindowLayout(object):
 class ImeSupportEventListener(sublime_plugin.EventListener):
     def __init__(self):
         self.layouts = {}
+        self.initialized = False
 
     def on_activated(self, view):
         self.update(view)
@@ -513,6 +507,10 @@ class ImeSupportEventListener(sublime_plugin.EventListener):
         self.update(view)
 
     def update(self, view):
+        if not self.initialized:
+            setup()
+            self.initialized = True
+
         if view is None:
             return
         window = view.window()
@@ -523,16 +521,13 @@ class ImeSupportEventListener(sublime_plugin.EventListener):
         if id not in self.layouts:
             self.layouts[id] = WindowLayout(window)
 
-        global last_hwnd
-        global last_pos
-
-        last_hwnd = window.hwnd()
-
         if view.settings().get('is_widget'):
-            last_pos = self.layouts[id].get_widget_cursor_position(view, view.sel()[0].a)
+            pos = self.layouts[id].get_widget_cursor_position(view, view.sel()[0].a)
         else:
             self.layouts[id].update_status(view)
-            last_pos = self.layouts[id].calc_cursor_position(view, view.sel()[0].a)
+            pos = self.layouts[id].calc_cursor_position(view, view.sel()[0].a)
+
+        set_func(window.hwnd(), pos)
 
 
 class ImeSupportGetMeasureCommand(sublime_plugin.WindowCommand):
@@ -563,4 +558,42 @@ class ImeSupportSetImeStatusCommand(sublime_plugin.TextCommand):
         set_ime_status(self.view.window().hwnd(), status)
 
 
-messagehook.setup(callback)
+try:
+    from imesupport import messagehook
+    from imesupport import globalhook
+except ImportError:
+    from .imesupport import messagehook
+    from .imesupport import globalhook
+
+
+set_func = None
+
+
+def setup():
+    global set_func
+
+    if int(sublime.version()) < 3000:
+        # Sublime Text 2 & Python 2.6
+        # messagehook.setup(callback)
+        # globalhook.setup(sublime.arch() == 'x64')
+        set_func = set_sublime_text3
+    else:
+        # Sublime Text 3 & Python 3.3
+        # globalhook.setup(sublime.arch() == 'x64')
+        set_func = set_sublime_text3
+
+
+def unload_handler():
+    print('ImeSupport: unload')
+    globalhook.term()
+
+
+def set_sublime_text2(hwnd, pos):
+    global last_hwnd
+    global last_pos
+    last_hwnd = hwnd
+    last_pos = pos
+
+
+def set_sublime_text3(hwnd, pos):
+    globalhook.set_inline_position(hwnd, *pos)

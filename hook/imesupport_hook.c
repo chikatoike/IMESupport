@@ -51,6 +51,17 @@ EXPORT BOOL EndHook(void)
 	return UnhookWindowsHookEx(hHook) != 0;
 }
 
+EXPORT int GetImeSupportMessage(void)
+{
+	static UINT message = 0;
+
+	if (message == 0) {
+		message = RegisterWindowMessage(_T("WM_IMESUPPORT_SET_INLINE_POSITION"));
+	}
+
+	return message;
+}
+
 EXPORT BOOL SetInlinePosition(HWND hWnd, int x, int y, int font_height)
 {
 	BOOL ret = FALSE;
@@ -104,21 +115,23 @@ static LRESULT CALLBACK WindowMessageHookProc(HWND hWnd, UINT msg, WPARAM wParam
 			SetInlinePosition(hWnd, x, y, font_height);
 		}
 		break;
-	case WM_IMESUPPORT_SET_INLINE_POSITION:
-		if (wParam != INVALID_VALUE && lParam != INVALID_VALUE) {
-			if (!bEnableTrace) {
-				bEnableTrace = TRUE;
-				Trace2(_T("start log"), FALSE);
+	default:
+		if (msg == GetImeSupportMessage()) {
+			if (wParam != INVALID_VALUE && lParam != INVALID_VALUE) {
+				if (!bEnableTrace) {
+					bEnableTrace = TRUE;
+					Trace2(_T("start log"), FALSE);
+				}
+				Trace(_T("WM_IMESUPPORT_SET_INLINE_POSITION"));
+				x = (wParam >> 16) & 0xffff;
+				y = wParam & 0xffff;
+				font_height = lParam;
 			}
-			Trace(_T("WM_IMESUPPORT_SET_INLINE_POSITION"));
-			x = (wParam >> 16) & 0xffff;
-			y = wParam & 0xffff;
-			font_height = lParam;
-		}
-		else {
-			x = INVALID_VALUE;
-			y = INVALID_VALUE;
-			font_height = INVALID_VALUE;
+			else {
+				x = INVALID_VALUE;
+				y = INVALID_VALUE;
+				font_height = INVALID_VALUE;
+			}
 		}
 		break;
 	}

@@ -12,6 +12,7 @@
 
 EXPORT BOOL StartHook(void);
 EXPORT BOOL EndHook(void);
+EXPORT int GetImeSupportMessage(void);
 EXPORT BOOL SetInlinePosition(HWND hWnd, int x, int y, int font_height);
 
 #endif

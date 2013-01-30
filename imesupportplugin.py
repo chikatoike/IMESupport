@@ -575,17 +575,17 @@ def setup():
     if int(sublime.version()) < 3000:
         # Sublime Text 2 & Python 2.6
         # messagehook.setup(callback)
-        # globalhook.setup(sublime.arch() == 'x64')
+        globalhook.setup(sublime.arch() == 'x64')
         set_func = set_sublime_text3
     else:
         # Sublime Text 3 & Python 3.3
-        # globalhook.setup(sublime.arch() == 'x64')
+        globalhook.setup(sublime.arch() == 'x64')
         set_func = set_sublime_text3
 
 
-def unload_handler():
-    print('ImeSupport: unload')
-    globalhook.term()
+# def unload_handler():
+#     print('ImeSupport: unload')
+#     globalhook.term()
 
 
 def set_sublime_text2(hwnd, pos):

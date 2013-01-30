@@ -23,10 +23,8 @@ BOOL WINAPI DllMain(HINSTANCE hModuleDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 	switch (fdwReason) {
 	case DLL_PROCESS_ATTACH:
-		Trace(_T("DLL_PROCESS_ATTACH"));
 		break;
 	case DLL_PROCESS_DETACH:
-		Trace(_T("DLL_PROCESS_DETACH"));
 		if (hHook != NULL) {
 			EndHook();
 		}
@@ -40,18 +38,21 @@ EXPORT BOOL StartHook(void)
 	if (hHook != NULL) {
 		return FALSE;
 	}
-	Trace(_T("start"));
-	hHook = SetWindowsHookEx(WH_CALLWNDPROC, MyHookProc, hModule, 0);
+	hHook = SetWindowsHookEx(WH_GETMESSAGE, MyHookProc, hModule, 0);
 	return hHook != NULL;
 }
 
 EXPORT BOOL EndHook(void)
 {
-	Trace(_T("end"));
-	return UnhookWindowsHookEx(hHook) != 0;
+	if (hHook == NULL) {
+		return FALSE;
+	}
+	BOOL ret = UnhookWindowsHookEx(hHook);
+	hHook = NULL;
+	return ret;
 }
 
-EXPORT int GetImeSupportMessage(void)
+EXPORT int GetMessageId(void)
 {
 	static UINT message = 0;
 
@@ -73,7 +74,7 @@ EXPORT BOOL SetInlinePosition(HWND hWnd, int x, int y, int font_height)
 		cf.ptCurrentPos.x = x;
 		cf.ptCurrentPos.y = y;
 		if (ImmSetCompositionWindow(hIMC, &cf)) {
-			LOGFONT lf = {0};
+			LOGFONTW lf = {0};
 			lf.lfHeight = font_height;
 			// lf.lfFaceName = font_face;
 			if (ImmSetCompositionFontW(hIMC, &lf)) {
@@ -86,19 +87,17 @@ EXPORT BOOL SetInlinePosition(HWND hWnd, int x, int y, int font_height)
 	return ret;
 }
 
-static LRESULT CALLBACK MyHookProc(int nCode, WPARAM wp, LPARAM lp)
+static LRESULT CALLBACK MyHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     if (nCode < 0) {
-        return CallNextHookEx(hHook, nCode, wp, lp);
+        return CallNextHookEx(hHook, nCode, wParam, lParam);
     }
     else if (nCode == HC_ACTION) {
-        if (wp == 0) {
-            const CWPSTRUCT *pcwp = (const CWPSTRUCT *)lp;
-            WindowMessageHookProc(pcwp->hwnd, pcwp->message, pcwp->wParam, pcwp->lParam);
-        }
+        const MSG *p = (const MSG *)lParam;
+        WindowMessageHookProc(p->hwnd, p->message, p->wParam, p->lParam);
     }
 
-    return CallNextHookEx(hHook, nCode, wp, lp);
+    return CallNextHookEx(hHook, nCode, wParam, lParam);
 }
 
 static LRESULT CALLBACK WindowMessageHookProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -111,18 +110,12 @@ static LRESULT CALLBACK WindowMessageHookProc(HWND hWnd, UINT msg, WPARAM wParam
 	case WM_IME_STARTCOMPOSITION:
 	case WM_IME_COMPOSITION:
 		if (x != INVALID_VALUE && y != INVALID_VALUE && font_height != INVALID_VALUE) {
-			Trace(_T("WM_IME_COMPOSITION"));
 			SetInlinePosition(hWnd, x, y, font_height);
 		}
 		break;
 	default:
-		if (msg == GetImeSupportMessage()) {
+		if (msg == GetMessageId()) {
 			if (wParam != INVALID_VALUE && lParam != INVALID_VALUE) {
-				if (!bEnableTrace) {
-					bEnableTrace = TRUE;
-					Trace2(_T("start log"), FALSE);
-				}
-				Trace(_T("WM_IMESUPPORT_SET_INLINE_POSITION"));
 				x = (wParam >> 16) & 0xffff;
 				y = wParam & 0xffff;
 				font_height = lParam;
@@ -151,6 +144,9 @@ static void Trace2(const TCHAR *str, BOOL append)
 	if (!bEnableTrace) {
 		return;
 	}
+
+	_tprintf(str);
+	_tprintf(_T("\n"));
 
 	GetModuleFileName(hModule, szFull, sizeof(szFull) / sizeof(TCHAR));
 	_tsplitpath(szFull, szDrive, szDir, NULL, NULL);

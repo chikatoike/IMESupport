@@ -4,15 +4,18 @@
 #include <windows.h>
 
 
-#define EXPORT
+#ifdef _MSC_VER
+  #define EXPORT __declspec(dllexport)
+#else
+  #define EXPORT
+#endif
 
-#define WM_IMESUPPORT_SET_INLINE_POSITION 0xB000
 #define INVALID_VALUE 0xffffffff
 
 
 EXPORT BOOL StartHook(void);
 EXPORT BOOL EndHook(void);
-EXPORT int GetImeSupportMessage(void);
+EXPORT int GetMessageId(void);
 EXPORT BOOL SetInlinePosition(HWND hWnd, int x, int y, int font_height);
 
 #endif

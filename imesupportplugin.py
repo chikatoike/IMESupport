@@ -527,7 +527,7 @@ class ImeSupportEventListener(sublime_plugin.EventListener):
             self.layouts[id].update_status(view)
             pos = self.layouts[id].calc_cursor_position(view, view.sel()[0].a)
 
-        set_func(window.hwnd(), pos)
+        set_pos(window.hwnd(), pos)
 
 
 class ImeSupportGetMeasureCommand(sublime_plugin.WindowCommand):
@@ -566,34 +566,33 @@ except ImportError:
     from .imesupport import globalhook
 
 
-set_func = None
-
-
-def setup():
-    global set_func
-
-    if int(sublime.version()) < 3000:
-        # Sublime Text 2 & Python 2.6
-        # messagehook.setup(callback)
-        globalhook.setup(sublime.arch() == 'x64')
-        set_func = set_sublime_text3
-    else:
-        # Sublime Text 3 & Python 3.3
-        globalhook.setup(sublime.arch() == 'x64')
-        set_func = set_sublime_text3
-
-
 # def unload_handler():
 #     print('ImeSupport: unload')
 #     globalhook.term()
 
 
-def set_sublime_text2(hwnd, pos):
+def setup():
+    if int(sublime.version()) < 3000:
+        # Sublime Text 2 & Python 2.6
+        messagehook.setup(callback)
+    else:
+        # Sublime Text 3 & Python 3.3
+        globalhook.setup(sublime.arch() == 'x64')
+
+
+def set_pos(hwnd, pos):
+    if int(sublime.version()) < 3000:
+        set_pos_st2(hwnd, pos)
+    else:
+        set_pos_st3(hwnd, pos)
+
+
+def set_pos_st2(hwnd, pos):
     global last_hwnd
     global last_pos
     last_hwnd = hwnd
     last_pos = pos
 
 
-def set_sublime_text3(hwnd, pos):
+def set_pos_st3(hwnd, pos):
     globalhook.set_inline_position(hwnd, *pos)

@@ -305,21 +305,14 @@ class WindowLayout(object):
         _, c = self.get_layout_rowcol(layout)
 
         g2d = self.make_list2d(self.get_group_list(window), c)
-        all_views_width1 = self.calc_group_offset_width(g2d, c)
+        all_views_width = sum(self.calc_group_offset_width(g2d, c))
 
-        window.run_command('toggle_side_bar')
-        temp = self.split_group  # backup current
-        self.split_group = self.split_group_status(window)
-
-        g2d = self.make_list2d(self.get_group_list(window), c)
-        all_views_width2 = self.calc_group_offset_width(g2d, c)
-
-        window.run_command('toggle_side_bar')
-        self.split_group = temp  # restore
-
-        diff = sum(all_views_width2) - sum(all_views_width1)
-        width = abs(diff)
-        return {'visible': diff > 0, 'width': width}
+        rect = RECT()
+        windll.user32.GetClientRect(c_ulong(window.hwnd()), byref(rect))
+        width = rect.right - all_views_width
+        if width < 0:
+            width = 0
+        return {'visible': width > 0, 'width': width}
 
     def calc_group_offset_width(self, g2d, group_col):
         r = len(g2d)

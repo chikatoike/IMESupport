@@ -3,6 +3,11 @@ import sublime
 import sublime_plugin
 import math
 
+try:
+    from imesupport.sublime_utility import fix_cloned_view
+except ImportError:
+    from .imesupport.sublime_utility import fix_cloned_view
+
 import ctypes
 from ctypes import windll, byref
 from ctypes import Structure, c_ulong
@@ -496,6 +501,7 @@ class ImeSupportEventListener(sublime_plugin.EventListener):
     def on_activated(self, view):
         self.update(view)
 
+    @fix_cloned_view
     def on_selection_modified(self, view):
         self.update(view)
 

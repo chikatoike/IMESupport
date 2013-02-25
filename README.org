@@ -54,7 +54,8 @@
 
 ** 既知の不具合
    - IME ON で連続で入力するときに、変換確定後の次の1文字が、前の入力開始位置と同じ場所に表示されてしまいます。 これは2文字以上入力すれば、正しい位置に移動します。
-   - File→New View into File で現在開いているファイルを新しいViewに表示した場合、最初のView以外では正しく動作しません。
+   - File→New View into File で現在開いているファイルを新しいViewに表示した場合、最初のView以外では正しく動作しない可能性があります。
+   これは Sublime Text 自体の不具合が原因です。適当な対策を実装していますが、パッケージ側で完全に対策するのは困難です。もし正しく動作していない場合はご報告下さい。
 
 ** 制限事項
    - ファイル編集以外の入力は対応していません。例えば、検索文字列の入力、Goto Anything などです。これらに入力フォーカスがある場合、強制的に画面左上に表示します。
@@ -65,6 +66,9 @@
   - http://sublimetext.userecho.com/topic/98697-handling-ime-message-on-windows-for-koreanjapanese-and-chinese-user/
 
 * CHANGELOG
+  2013-02-26
+  - File→New View into File で開いたビューでの不具合対策(ST2/ST3)
+
   2013-02-09
   - Sublime text 3 でside barが表示されているときに、IMEの表示位置がずれていた問題を修正 (shirosakiさん、ありがとうごさいます)
 

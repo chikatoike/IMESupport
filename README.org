@@ -65,6 +65,9 @@
   - http://sublimetext.userecho.com/topic/98697-handling-ime-message-on-windows-for-koreanjapanese-and-chinese-user/
 
 * CHANGELOG
+  2013-02-09
+  - Sublime text 3 でside barが表示されているときに、IMEの表示位置がずれていた問題を修正 (shirosakiさん、ありがとうごさいます)
+
   2013-01-30
   - Sublime Text 3 に対応
   - ver.0.2 開発開始
@@ -85,7 +88,7 @@
   2012-11-11
   - 対応するIMEについて追記
 
-  2012-11-7
+  2012-11-07
   - IME起動時のフォントの大きさを修正 (tkmusic1976さん、ありがとうございます)
 
   2012-10-30

@@ -199,7 +199,7 @@ class WindowLayout(object):
     def __init__(self, window):
         self.window = window
         self.last_extents = None
-        self.load_settings()
+        self.settings = sublime.load_settings('IMESupport.sublime-settings')
 
     def calc_cursor_position(self, view, cursor):
         abspoint = view.text_to_layout(cursor)
@@ -241,7 +241,6 @@ class WindowLayout(object):
         self.last_extents = extents
 
         # Get status.
-        self.load_settings()
         self.get_status(view)
 
     def get_status(self, view=None):
@@ -271,9 +270,6 @@ class WindowLayout(object):
             'hscroll_bar': hscroll_bar,
             'side_bar': self.side_bar,
             }
-
-    def load_settings(self):
-        self.settings = sublime.load_settings('IMESupport.sublime-settings')
 
     def get_setting(self, key, default=None):
         return self.settings.get(key, default)

@@ -160,13 +160,25 @@ def set_inline_position(hwnd, x, y, font_face, font_height):
     hIMC = windll.imm32.ImmGetContext(hwnd)
     status = windll.imm32.ImmGetOpenStatus(hIMC)
     if not status:
-        windll.imm32.ImmReleaseContext(hwnd, hIMC)
-        return
+        # Enable IME temporary.
+        ctypes.windll.imm32.ImmSetOpenStatus(hIMC, 1)
 
     pt = POINT(x, y)
     cf = COMPOSITIONFORM()
     cf.dwStyle = 2      # CFS_POINT
     cf.ptCurrentPos = pt
+
+    # Supporting Weasel IME
+    # For more detail see also WeaselIME.cpp@WeaselIME::_SetCompositionWindow
+    cf.rcArea.left = x
+    cf.rcArea.top = y
+    if x == 0:
+        cf.rcArea.left = 1
+    if y == 0:
+        cf.rcArea.top = 1
+    cf.rcArea.right = cf.rcArea.left
+    cf.rcArea.bottom = cf.rcArea.top
+
     windll.imm32.ImmSetCompositionWindow(hIMC, byref(cf))
 
     lf = LOGFONT()
@@ -174,25 +186,9 @@ def set_inline_position(hwnd, x, y, font_face, font_height):
     lf.lfFaceName = font_face
     windll.imm32.ImmSetCompositionFontW(hIMC, byref(lf))
 
+    if not status:
+        ctypes.windll.imm32.ImmSetOpenStatus(hIMC, 0)
     windll.imm32.ImmReleaseContext(hwnd, hIMC)
-
-
-last_hwnd = 0
-last_pos = ()
-last_set_pos = ()
-
-
-def callback(hwnd, msg, wParam, lParam):
-    if msg == WM_IME_STARTCOMPOSITION or msg == WM_IME_COMPOSITION:
-        try:
-            global last_set_pos
-            if len(last_pos) > 0 and last_pos != last_set_pos and hwnd == last_hwnd:
-                set_inline_position(hwnd, *last_pos)
-                last_set_pos = last_pos
-        except Exception as e:
-            print('last_pos: ' + str(last_pos))
-            print('Exception: ' + str(e))
-    return None
 
 
 class WindowLayout(object):
@@ -554,10 +550,8 @@ class ImeSupportSetImeStatusCommand(sublime_plugin.TextCommand):
 
 
 try:
-    from imesupport import messagehook
     from imesupport import globalhook
 except ImportError:
-    from .imesupport import messagehook
     from .imesupport import globalhook
 
 
@@ -569,7 +563,7 @@ except ImportError:
 def setup():
     if int(sublime.version()) < 3000:
         # Sublime Text 2 & Python 2.6
-        messagehook.setup(callback)
+        pass
     else:
         # Sublime Text 3 & Python 3.3
         globalhook.setup(sublime.arch() == 'x64')
@@ -583,10 +577,8 @@ def set_pos(hwnd, pos):
 
 
 def set_pos_st2(hwnd, pos):
-    global last_hwnd
-    global last_pos
-    last_hwnd = hwnd
-    last_pos = pos
+    # set position directly here. (Not handle IME messages.)
+    set_inline_position(hwnd, *pos)
 
 
 def set_pos_st3(hwnd, pos):

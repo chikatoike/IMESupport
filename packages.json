@@ -11,7 +11,7 @@
                 "windows": [
                     {
                         "version": "1.0.0",
-                        "url": "https://nodeload.github.com/chikatoike/IMESupport/zipball/master"
+                        "url": "https://github.com/chikatoike/IMESupport/archive/master.zip"
                     }
                 ]
             }

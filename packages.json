@@ -6,6 +6,7 @@
             "details": "https://github.com/chikatoike/IMESupport",
             "releases": [
                 {
+                    "sublime_text": "*",
                     "platforms": "windows",
                     "details": "https://github.com/chikatoike/IMESupport"
                 }

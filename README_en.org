@@ -1,7 +1,7 @@
-* IMESupport for Sublime Text 2
+* IMESupport for Sublime Text 2/3
 
 * Description
-  In current version of Sublime Text2, there is a problem that can not be displayed IME composition window correctly.
+  In current version of Sublime Text 2/3, there is a problem that can not be displayed IME composition window correctly.
   This plugin solves this problem.
 
 * Target platform

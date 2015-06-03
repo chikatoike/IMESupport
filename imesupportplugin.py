@@ -159,9 +159,9 @@ def set_inline_position(hwnd, x, y, font_face, font_height):
     # borrowed from http://d.hatena.ne.jp/doloopwhile/20090627/1275176169
     hIMC = windll.imm32.ImmGetContext(hwnd)
     status = windll.imm32.ImmGetOpenStatus(hIMC)
-    if not status:
+    # if not status:
         # Enable IME temporary.
-        ctypes.windll.imm32.ImmSetOpenStatus(hIMC, 1)
+        # ctypes.windll.imm32.ImmSetOpenStatus(hIMC, 1)
 
     pt = POINT(x, y)
     cf = COMPOSITIONFORM()
